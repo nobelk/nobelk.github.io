@@ -1,35 +1,27 @@
 ---
 layout: post
-title:  "Ring-based continuous deployment"
+title:  "Ring-wise continuous deployment"
 date:   2020-08-15 10:47:53 +0600
 categories: continuous delivery
 
 comments: true
 ---
+# DevOps cycle today
 
 ![Devops cycle](/assets/devopsCycle.png)
 
-
 There is a continuous struggle happenning in today's software delivery landscape.  On one side are the developers, delivery managers, business owners who would like to make their work (product features) available to the customers quickly and on the other hand are the QA engineers, the devops engineers, who would like to take some time to ensure that we avoid regressions and service outages at all cost while we deliver those new features.  Both sides have valid points, delivering features quickly seems to be a key component of capturing market share on the other hand, service outage causes the users real pain and translates into revenue loss, and in the worst case, loss of market share or user base.
 
-> Well, that is easy, how about we hire an army of amazing engineers who write flawless code with 100% unit test coverage? - we can just push that code to production quickly, right
+Well, that is easy, how about we hire an army of amazing engineers who write flawless code with 100% unit test coverage? - we can just push that code to production quickly, right?
 
-{% include note.html content="Testing (unit, manual, etc.) can only ensure the presense of bugs, not the absence." %}
+> Testing (unit, manual, etc.) can only ensure the presense of bugs, not the absence.
 
- > True story: one time, my whole team of brilliant engineers had to spend days debugging an issue cased by a single {% highlight ruby %}
-def foo
-  puts 'foo'
-end
-{% endhighlight %}
-
+True story: during a service incident, a number of engineers in my team had to spend days debugging an issue caused by a *single instance* of case-sensitive string comparison. 
+ 
+# Ring-based deployment
 So, what is the answer?
 
-
 ![Deployment rings](/assets/deployment-rings.jpg)
-
-[jekyll-docs]: https://jekyllrb.com/docs/home
-[jekyll-gh]:   https://github.com/jekyll/jekyll
-[jekyll-talk]: https://talk.jekyllrb.com/
 
 
 {% if page.comments %}
