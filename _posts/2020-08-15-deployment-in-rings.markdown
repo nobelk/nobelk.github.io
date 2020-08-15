@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Welcome to Jekyll!"
+title:  "Ring-based continuous deployment"
 date:   2020-08-15 10:47:53 +0600
 categories: continuous delivery
 
@@ -43,8 +43,8 @@ Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most ou
 *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
 /*
 var disqus_config = function () {
-this.page.url = nobelk.github.io;  // Replace PAGE_URL with your page's canonical URL variable
-this.page.identifier = 815; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+this.page.url = 'nobelk.github.io';  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = '/2020-08-15-deployment-in-rings/'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
 };
 */
 (function() { // DON'T EDIT BELOW THIS LINE
