@@ -7,6 +7,8 @@ categories: continuous delivery
 comments: true
 ---
 
+![Deployment rings](/assets/deployment-rings.jpg)
+
 You’ll find this post in your `_posts` directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run `jekyll serve`, which launches a web server and auto-regenerates your site when a file is updated.
 
 
@@ -43,8 +45,8 @@ Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most ou
 *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
 /*
 var disqus_config = function () {
-this.page.url = 'nobelk.github.io';  // Replace PAGE_URL with your page's canonical URL variable
-this.page.identifier = '2020-08-15-deployment-in-rings'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+// this.page.url = 'nobelk.github.io';  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = '3'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
 };
 */
 (function() { // DON'T EDIT BELOW THIS LINE
