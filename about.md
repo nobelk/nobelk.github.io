@@ -6,6 +6,8 @@ permalink: /about/
 
 # Hello and Welcome
 
+![My helpful screenshot](/assets/meByTheLake.jpg)
+
 This is a blog about helpful tech and engineering topics centered around information technology.
 I have been fortunate enough to complete by B.Sc. degree from Dhaka University.  Post my graduation, I moved to the USA and completed my M.Sc. and Ph.D. in Computer Science in the University of Nebraska - Lincoln.  Post graduation, I joined Microsoft as SDET (Software development engineer in Test).  During my 8-year tenure in Microsoft, I have switched to the software developer role and finally ended up being a Lead Senior Software Development Engineer in the Information Protection area. In the year of 2020, I left Microsoft and joined Shohoz a leading startup in Bangladesh.
 
