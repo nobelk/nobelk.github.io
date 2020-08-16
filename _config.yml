@@ -37,7 +37,7 @@ texture:
   tagline: Software Architect
   date_format: "%b %-d, %Y"
   style: blue
-  show_excerpts: true
+  showNav: true
 
   social_links:
     twitter: thelehhman
@@ -46,6 +46,7 @@ texture:
 
   # chesterhow/tale
 
+show_excerpts: true
 permalink:    /:year-:month-:day/:title
 paginate:     5
 
