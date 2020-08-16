@@ -30,7 +30,20 @@ url: "https://nobelk.github.io" # the base hostname & protocol for your site, e.
 github_username:  nobelk
 
 # Build settings
-remote_theme: chesterhow/tale
+remote_theme: thelehhman/texture
+
+texture:
+  title: Nobel Khandaker
+  tagline: Software Architect
+  date_format: "%b %-d, %Y"
+  style: blue
+
+  social_links:
+    twitter: thelehhman
+    github:  thelehhman
+    linkedIn: in/thelehhman # format: locale/username
+
+  # chesterhow/tale
 
 permalink:    /:year-:month-:day/:title
 paginate:     5
