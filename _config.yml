@@ -36,7 +36,7 @@ texture:
   title: Nobel Khandaker
   tagline: Software Architect
   date_format: "%b %-d, %Y"
-  style: yellow
+  style: blue
   show_excerpts: true
 
   social_links:
