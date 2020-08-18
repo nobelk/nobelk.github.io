@@ -2,9 +2,7 @@ title: BdTechBlog
 author: Dr. Nobel Khandaker
 email: your-email@domain.com
 description: > # this means to ignore newlines until "show_exerpts:"
-  Write an awesome description for your new site here. You can edit this
-  line in _config.yml. It will appear in your document head meta (for
-  Google search results) and in your feed.xml site description.
+  Blog about scalable software engineering.  Contains solutions to real-world software development, QA, deployment, service maintenance problems.
 show_excerpts: true # set to true to show excerpts on the homepage
 baseurl: "" #/nobelk.github.io
 
@@ -16,17 +14,21 @@ sass:
 permalink: /posts/:title/
 texture:
   title: Dr. Nobel Khandaker
-  tagline: Architect Ex. Microsoft
+  tagline: VP Technology (Ex. Microsoft Lead Senior Software Engineer)
   date_format: "%b %-d, %Y"
   style: black
   showNav: true
   showPicker: false
+  navigation:
+    - title: My Work
+      url: "/my-work"
+    - title: Resume
+      url: "/resume"
 
   # generate social links in footer
   social_links:
-    twitter: thelehhman
-    github:  thelehhman
-    linkedIn: in/thelehhman
+    github:  nobelk
+    linkedIn: in/nobelkhandaker
     rss: rss
  
 
