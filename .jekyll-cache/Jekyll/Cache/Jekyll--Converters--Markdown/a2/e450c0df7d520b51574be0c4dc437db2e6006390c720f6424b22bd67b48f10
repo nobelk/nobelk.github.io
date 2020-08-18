@@ -1,0 +1,64 @@
+I"�<p>There is a continuous struggle happenning in today’s software delivery landscape.  On one side are the developers, delivery managers, business owners who would like to make their work (product features) available to the users quickly and on the other hand are the QA engineers, the devops engineers, who would like to take some time to ensure that we avoid regressions and service outages at all cost while we deliver those new features.  Both sides have valid points, delivering features quickly seems to be a key component of capturing market share on the other hand, service outage causes the users real pain and translates into revenue loss, and in the worst case, loss of market share or user base.</p>
+
+<p><img src="/assets/devopsCycle.png" alt="Devops cycle" /></p>
+
+<p>Well, how about we hire an army of amazing engineers who write flawless code with 100% unit test coverage? - we can just push that code to production quickly, right?</p>
+
+<blockquote>
+  <p>Testing (unit, manual, etc.) can only ensure the presense of bugs, not the absence.</p>
+</blockquote>
+
+<p>True story: during a service incident, a number of engineers in my team had to spend days debugging an issue caused by a <em>single instance</em> of case-sensitive string comparison.</p>
+
+<h1 id="ring-wise-deployment">Ring-wise deployment</h1>
+
+<p>Over time, all software components increase its interdependencies with other components within the architectures.  When we deploy a sizeable change in a component or a new component, the probability of the introduction of bugs increases.  These could be caused by logical errors, by faulty code, and or integration issues.  Given this high probability, there needs to be a way to mitigate any negative impact on the customer bases while we deploy code to the production environment.</p>
+
+<p>Ring-wise continuous deployment is one such method to mitigate the risk of customer impact while achieving high velocity of feature delivery.</p>
+
+<p><img src="/assets/deployment-rings.jpg" alt="Deployment rings" /></p>
+
+<blockquote>
+  <p>Concept: Divide all environments where the software component is available into several rings of availability.  Starting from the developer’s machine (Ring 0), to the final production environment (Ring 3).  Continually deploy and <em>test</em> software features from one ring to the next until it is available to all users.</p>
+</blockquote>
+
+<p>The exact implementation of the rings depends on the type of software, the team, and the target user base, one such definition for a moderate-sized team could be:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Ring</th>
+      <th>Description</th>
+      <th>Types of testing</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Ring 0</td>
+      <td>Developer’s machine</td>
+      <td>unit tests, functional tests, manual tests</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>Ring 1</td>
+      <td>Staging/release environment</td>
+      <td>integration testing</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>Ring 2</td>
+      <td>Production preview</td>
+      <td>testing in production, monitoring</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>Ring 3</td>
+      <td>Production</td>
+      <td>testing in production, performances</td>
+    </tr>
+  </tbody>
+</table>
+:ET
