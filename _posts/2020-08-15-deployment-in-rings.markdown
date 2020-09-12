@@ -28,6 +28,11 @@ Ring-wise continuous deployment is one such method to mitigate the risk of custo
 
 > Concept: Divide all environments where the software component is available into several rings of availability.  Starting from the developer's machine (Ring 0), to the final production environment (Ring 3).  Continually deploy and *test* software features from one ring to the next until it is available to all users. 
 
+First Header | Second Header
+------------ | -------------
+Content from cell 1 | Content from cell 2
+Content in the first column | Content in the second column
+
 The exact implementation of the rings depends on the type of software, the team, and the target user base, one such definition for a moderate-sized team could be:
 
 | Ring | Description                | Testing                                    |   |   |
