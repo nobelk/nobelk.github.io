@@ -30,13 +30,13 @@ Ring-wise continuous deployment is one such method to mitigate the risk of custo
 
 The exact implementation of the rings depends on the type of software, the team, and the target user base, one such definition for a moderate-sized team could be:
 
-| Ring | Description | Types of testing
-| -----|-------------|-------------------
-| Ring 0 | Developer's machine | unit tests, functional tests, manual tests
-| -------|---------------------|--------------------------------------------
-| Ring 1 | Staging/release environment | integration testing
-| -------|-----------------------------|----------------------
-| Ring 2 | Production preview | testing in production, monitoring
-| -------|---------------------|-----------------------------------
-| Ring 3 | Production | testing in production, performances
-| -------|------------|--------------------------------------
+| Ring | Description | Types of testing |
+| -----|-------------|------------------- |
+| Ring 0 | Developer's machine | unit tests, functional tests, manual tests |
+| -------|---------------------|-------------------------------------------- |
+| Ring 1 | Staging/release environment | integration testing |
+| -------|-----------------------------|---------------------- |
+| Ring 2 | Production preview | testing in production, monitoring |
+| -------|---------------------|----------------------------------- |
+| Ring 3 | Production | testing in production, performances |
+| -------|------------|-------------------------------------- |
