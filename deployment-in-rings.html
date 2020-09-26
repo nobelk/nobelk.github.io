@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Intelligent software</title>
+    <link rel="stylesheet" href="tufte.css"/>
+    <link rel="stylesheet" href="latex.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+
+  <body>
+    <article>
+      <h1 id="tufte-css">Deployment in rings</h1>
+      <p class="subtitle">A continuous struggle</p>
+      <section>
+        <p>There is a continuous struggle happenning in today's software delivery landscape.  On one side are the developers, delivery managers, business owners who would like to make their work (product features) available to the users quickly and on the other hand are the QA engineers, the devops engineers, who would like to take some time to ensure that we avoid regressions and service outages at all cost while we deliver those new features.</p>
+
+        <figure>
+          <img src="img/devopsCycle.png" alt="DevOps cycle" height="50%" width="50%"/>
+        </figure>      
+        
+        <p>Both sides have valid points, delivering features quickly seems to be a key component of capturing market share on the other hand, service outage causes the users real pain and translates into revenue loss, and in the worst case, loss of market share or user base.</p>
+        <p>Well, how about we hire an army of amazing engineers who write flawless code with 100% unit test coverage? - we can just push that code to production quickly, right?, Wrong.
+        <span class="marginnote">Testing (unit, manual, etc.) can only ensure the presense of bugs, not the absence</span>
+        True story, during a service incident, several engineers in one of my previous team had to spend days debugging an issue caused by a <em>single instance</em> of case-sensitive string comparison.</p>
+      </section>
+
+      <section>
+        <h2 id="deployment-rings">Concept of deployment rings</h2>
+        <p>Over time, all software components increase its interdependencies with other components within the architectures.  When we deploy a sizeable change in a component or a new component, the probability of the introduction of bugs increases.  These could be caused by logical errors, by faulty code, and or integration issues.  Given this high probability, there needs to be a way to mitigate any negative impact on the customer bases while we deploy code to the production environment.
+
+        Ring-wise continuous deployment is one such method to mitigate the risk of customer impact while achieving high velocity of feature delivery.</p>
+        
+        <figure>
+          <img src="img/deployment-rings.jpg" alt="Deployment rings" height="60%" width="60%"/>
+        </figure>
+
+        <p>
+          Divide all environments where the software component is available into several rings of availability.  Starting from the developer's machine (Ring 0), to the final production environment (Ring 3).  Continually deploy and <em>test</em> software features from one ring to the next until it is available to all users.
+          
+          The exact implementation of the rings depends on the type of software, the team, and the target user base, one such definition for a moderate-sized team could be:
+
+          <div class="table-wrapper">
+          <table border="1px">
+            <tr>
+              <th>Ring#</th>
+              <th>Description</th>
+              <th>Testing type</th>
+            </tr>
+            <tr>
+              <td>0</td>
+              <td>Developer's machine</td>
+              <td>Unit, functional, or manual tests</td>              
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>Staging environment</td>
+              <td>Functional, manual, or integration tests</td>              
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Production preview</td>
+              <td>Integration, performance</td>              
+            </tr>
+            <tr>
+              <td>0</td>
+              <td>Production</td>
+              <td>n/a</td>              
+            </tr>
+          </table>
+          </div>
+        </p>
+      </section>
+
+      <section>
+        <h2 id="epilogue">Epilogue</h2>
+        <p>Many thanks go to Edward Tufte for leading the way with his work. It is only through his kind and careful editing that this project accomplishes what it does. All errors of implementation are of course mine.</p>
+      </section>
+    </article>
+  </body>
+</html>
