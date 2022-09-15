@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Deploying software in rings of production environment</title>
+  <link rel="stylesheet" href="tufte.css" />
+  <link rel="stylesheet" href="latex.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <article>
+    <section>
+      <p>
+        <a href="https://nobelkhandaker.com/index.html">
+          home
+        </a> |
+        <a href="https://nobelkhandaker.com/index.html#photography">
+          photography
+        </a> |
+        <a href="https://nobelkhandaker.com/index.html#software_eng">
+          software engineering
+        </a> |
+        <a href="https://nobelkhandaker.com/index.html#talks"> talks
+        </a> |
+        <a href="https://nobelkhandaker.com/index.html#bio"> About
+        </a>
+      </p>
+      <hr>
+      <h1 id="ring-deployment-heading">Reducing risk while deploying changes in a cloud service</h1>
+      <p class="subtitle">Sometimes a 1-line change is all it takes ...</p>
+      <p>There is a continuous struggle happening in today's software development landscape. On one side are the
+        developers, delivery managers, business owners who would like to make their work (product features) available to
+        the users quickly and on the other hand are the QA engineers, the devops engineers, who would like to take some
+        time to ensure that we avoid regressions and service outages at all cost while we deliver those new features.
+      </p>
+
+      <figure>
+        <img src="img/software_eng/devopsCycle.png" alt="DevOps cycle" height="50%" width="50%" />
+      </figure>
+
+      <p>Both sides have valid points, delivering features quickly seems to be a key component of capturing market share
+        on the other hand, service outage causes the users real pain and translates into revenue loss, and in the worst
+        case, loss of market share or user base.</p>
+      <p>Well, how about we hire an army of amazing engineers who write flawless code with 100% unit test coverage? - we
+        can just push that code to production quickly, right?, Wrong.
+        <span class="marginnote">Testing (unit, manual, etc.) can only ensure the presence of bugs, not the
+          absence</span>
+        True story, during a service incident, several engineers in one of my previous team had to spend days debugging
+        an issue caused by a <em>single instance</em> of case-sensitive string comparison.
+      </p>
+    </section>
+
+    <section>
+      <h2 id="deployment-rings">Ring-wise deployments</h2>
+      <p>Over time, all software components increase its interdependencies with other components within the
+        architectures. When we deploy a sizeable change in a component or a new component, the probability of the
+        introduction of bugs increases. These could be caused by logical errors, by faulty code, and or integration
+        issues. Given this high probability, there needs to be a way to mitigate any negative impact on the customer
+        bases while we deploy code to the production environment.
+
+        Ring-wise continuous deployment is one such method to mitigate the risk of customer impact while achieving high
+        velocity of feature delivery.</p>
+
+      <p>
+        Divide all environments where the software component is available into several rings of availability. Starting
+        from the developer's machine (Ring 0), to the final production environment (Ring 3). Continually deploy and
+        <em>test</em> software features from one ring to the next until it is available to all users.
+
+        The exact implementation of the rings depends on the type of software, the team, and the target user base, one
+        such definition for a moderate-sized team could be:
+
+      <div class="table-wrapper">
+        <table>
+          <tr>
+            <th>Ring#</th>
+            <th>Description</th>
+            <th>Testing type</th>
+          </tr>
+          <tr>
+            <td>0</td>
+            <td>Developer's machine</td>
+            <td>Unit, functional, or manual tests</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Staging environment</td>
+            <td>Functional, manual, or integration tests</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Production preview</td>
+            <td>Integration, performance</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Production</td>
+            <td>TIP (Testing in production)</td>
+          </tr>
+        </table>
+      </div>
+      </p>
+    </section>
+
+    <section>
+      <h2 id="epilogue">Epilogue</h2>
+      <p>
+        The underlying need of deploying software w/o causing disruptions in
+        the production environment arises from the customer-first/user-first thinking. In that case, the tech, product, and operations teams all work towards achieving the optimal experience for their customers. The additional work for ring-wise deployment and testing
+        is part of that cost.
+      </p>
+    </section>
+
+  </article>
+</body>
+
+</html>

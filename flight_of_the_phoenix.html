@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Flighting the changes in your software for a safer deployment</title>
+  <link rel="stylesheet" href="tufte.css" />
+  <link rel="stylesheet" href="latex.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <article>
+    <h1 id="feature_toggle_heading">Feature toggle and testing in production</h1>
+    <section>
+      <p>
+        <a href="https://nobelkhandaker.com/index.html">
+          home
+        </a> |
+        <a href="https://nobelkhandaker.com/index.html#photography">
+          photography
+        </a> |
+        <a href="https://nobelkhandaker.com/index.html#software_eng">
+          software engineering
+        </a> |
+        <a href="https://nobelkhandaker.com/index.html#talks"> talks
+        </a> |
+        <a href="https://nobelkhandaker.com/index.html#bio"> About
+        </a>
+      </p>
+      <hr>
+      <p>The fast continuous integration and deployment cycles adopted by the majority of the software organizations mean greater code churn - new features are being released everyday and old features are being deprecated.  For a large software development team, such churn makes it difficult for engineers to keep track of all ongoing changes and dependencies.  This in turn increases the possibility of making human errors, introduces bugs, and degrades user experience.</p>
+
+     <p>A ring-based testing and deployment approach would help an organization navigate this high risk since we are able to test the software in   an environment <span class="marginnote">release or pre-production</span> that has the same dependencies, infrastructures, and code as the production environment. One remaining problem that we need to tackle in this scenario is that for a most large organizations and software engineering teams, it is practically impossible to have the release environment to be an exact replica of the production environment.</p> 
+
+     <p>
+      What we need is to a mechanism to test or experiment with new features in the production environment (that includes all bells and whistles).  We can also segment all of our users into cohorts <span class="marginnote">internal team members, preview customers, customers in a specific geographic location, etc.</span>, run A/B tests, and or release the feature gradually to them.
+     </p>
+
+     <p>
+       The following libraries provide feature flighting functionalities:
+       <ul>
+         <li>
+           <a href="https://github.com/github/scientist">Github scientist</a>
+         </li>
+         <li>
+           <a href="https://getunleash.io">Unleash</a>
+         </li>
+         <li>
+           <a href="https://github.com/microsoft/FeatureManagement-Dotnet">Feature management - Dotnet</a>
+         </li>
+       </ul>
+     </p>
+    </section>
+
+  </article>
+</body>
+
+</html>
