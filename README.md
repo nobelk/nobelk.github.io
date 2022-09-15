@@ -1,1 +1,1 @@
-nobelkhandaker.com
+Blog of Dr. Nobel Khandaker
