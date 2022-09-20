@@ -42,7 +42,7 @@
         </p>
 
         <figure>
-            <img src="img/misc/mars_rover.png" height="75%" width="75%">
+            <img src="img/misc/mars_rover.png">
             <p class="figcaption">
                 Newspaper cartoon depicting the Mars orbiter disaster (source:
                 slideplayer.com)
@@ -70,7 +70,7 @@
                 <span class="marginnote">
                     Once I did not add enough unit tests in my code, a senior
                     developer asked me "How do you know that your code works?"
-              </span>
+                </span>
                 When practicing TDD (test driven development), you would write a
                 test for your new piece of code, run the test which will fail, and then
                 write code until that failing test passes. The unit tests are
@@ -95,12 +95,10 @@
             or module. While building a car, functional testing would be
             measuring the torque while running the engine with the input of gas
             and battery.
-
-            <label for="sonarqube-sidenote"
-                   class="margin-toggle sidenote-number"></label>
-            <input type="checkbox" id="sonarqube-sidenote"
-                   class="margin-toggle"/>
-            <span class="sidenote">
+            <label for="sonarqube-sidenote" class="margin-toggle">&#8853;
+            </label>
+            <input type="checkbox" id="sonarqube-sidenote" class="margin-toggle"/>
+            <span class="marginnote">
                 Tools such as <a href="https://www.sonarqube.org">Sonarqube
             </a> can help you run all unit and functional tests on demand or
                 as part of the CI/CD pipeline.
@@ -140,15 +138,13 @@
             fail, the monitor alerts the supporting engineering team. In our car
             example, it would be like checking the battery power and the engine
             temperature while the car is being driven.
-
-            <label for="alert_threshold_sidenote"
-                   class="margin-toggle sidenote-number"></label>
-            <input type="checkbox" id="alert_threshold_sidenote"
-                   class="margin-toggle"/>
-            <span class="sidenote">
-                Although monitoring logic could be added to software with
-                relative ease, determining the alert threshold for a monitor usually
-                takes continual review of the overall alert configuration.
+            <label for="alerting-sidenote" class="margin-toggle">&#8853;
+            </label>
+            <input type="checkbox" id="alerting-sidenote" class="margin-toggle"/>
+            <span class="marginnote">
+               Finding the right balance between effective monitoring and
+                alerting noise will take continual testing and re-adjustment
+                of alert threshold.
             </span>
         </p>
 
@@ -163,12 +159,14 @@
             to verify its actual mileage. A successful optics infrastructure should
             contain a small set of basic reports and the ability to export
             collected data.
-
-        <label for="optics_usefulness_sidenote"
-               class="margin-toggle sidenote-number"></label>
-        <input type="checkbox" id="optics_usefulness_sidenote"
-               class="margin-toggle"/>
-        <span class="sidenote">Both monitoring and optics features can reveal surprising information about the software and even reveal hard to find bugs before it impacts the functionality of the software.</span>
+            <label for="optics-sidenote" class="margin-toggle">&#8853;
+            </label>
+            <input type="checkbox" id="optics-sidenote" class="margin-toggle"/>
+            <span class="marginnote">
+              Periodic analysis of the exceptions and performance data
+                collected from your production environvent is an effective
+                method of improving your quality of service (QoS).
+            </span>
         </p>
 
         <blockquote>
