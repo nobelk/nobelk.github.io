@@ -30,62 +30,67 @@
         </p>
         <hr>
 
-        <p>It was a bright sunny morning when I read the unbelievable news -
+        <p>
+            It was a bright sunny morning when I read the unbelievable news -
             the Mars Rover was destroyed because the engineers who built it did
             not convert metric to English system and tragedy ensued. My younger
             self at that time could not fathom the idea that a simple conversion
             could bring an untimely end to the 125Million dollar project. After
             working for 5 1/2 years as a Software Test Engineer and Developer
             for Office 365 at Microsoft, I now can see how that error could have
-            happened. </p>
+            happened.
+        </p>
 
         <figure>
-            <img src="img/misc/mars_rover.png" height="50%" width="50%">
+            <img src="img/misc/mars_rover.png" height="75%" width="75%">
             <p class="figcaption">
                 Newspaper cartoon depicting the Mars orbiter disaster (source:
                 slideplayer.com)
             </p>
         </figure>
 
-        <p>As the complexity of the software projects grow, so does the
+        <p>
+            As the complexity of the software projects grow, so does the
             difficulty of testing those big software projects. With the growth
             of cloud technologies, the number of users who use a software now
             reaches hundreds of millions and even billions. When the mistakes
             are made, the cost of that mistake can now potentially be
             catastrophic. I often think about the role of testing and decided to
             write a birds eye view of the testing process in the software
-            industry - the tale from trenches so to speak.</p>
+            industry - the tale from trenches so to speak.
+        </p>
 
         <h3>Unit Test</h3>
         <p>
-            Unit testing is the first line of defense against those creepy
-            crawlies. Using TDD (test driven development), you would write a
-            test
-            for your new piece of code, run the test which will fail, and then
-            write code until the test passes. The unit tests are usually
-            white-box tests - tests that know how a unit/function operates.
-            While building a car, a unit test would be measuring and verifying
-            the current produced by the alternator.</p>
-        <p>
-        <ul>
-            <li>Unit tests should run within milliseconds time</li>
-            <li>Unit test code coverage should be fairly high >= 95% for your
-            test cases to be effective against regressions or bugs.</li>
-            <li>Unit tests are the best tool for refactoring your legacy code.</li>
-        </ul>
-            <label for="unit_test_as_documentation"
-                   class="margin-toggle sidenote-number"></label>
-            <input type="checkbox" id="unit_test_as_documentation"
-                   class="margin-toggle"/>
-            <span class="sidenote">
-                writing and adding unit tests are the most effective form of
-        documentation.  all other documentation methods (e.g., wikis, guides,
-         readme) become obsolete over time.
-            </span>
+                Unit testing is the first line of defense against those creepy
+                crawlies
+                <label for="mn-unit-test-exp" class="margin-toggle">&#8853;
+                </label>
+                <input type="checkbox" id="mn-unit-test-exp" class="margin-toggle"/>
+                <span class="marginnote">
+                    Once I did not add enough unit tests in my code, a senior
+                    developer asked me "How do you know that your code works?"
+              </span>
+                When practicing TDD (test driven development), you would write a
+                test for your new piece of code, run the test which will fail, and then
+                write code until that failing test passes. The unit tests are
+                usually
+                white-box tests - tests that know how a unit/function operates.
+                While building a car, a unit test would be measuring and verifying
+                the current produced by the alternator.</p>
+            <ul>
+                <li>Unit tests should run within milliseconds time</li>
+                <li>Unit test code coverage should be fairly high >= 95% for your
+                test cases to be effective against regressions or bugs.</li>
+                <li>Unit tests are the best tool for refactoring your legacy code.</li>
+                <li>When kept up-to-date, unit test becomes the best form of
+                    documentation for your code.</li>
+            </ul>
         </p>
 
         <h3>Functional tests</h3>
-        <p>The functional tests takes on the dependencies of external libraries
+        <p>
+            The functional tests takes on the dependencies of external libraries
             and services to test the functionality of an entire computer program
             or module. While building a car, functional testing would be
             measuring the torque while running the engine with the input of gas
@@ -103,16 +108,19 @@
         </p>
 
         <h3>Integration Tests</h3>
-        <p>These are the heavyweights of the testing world. These are designed
+        <p>
+            These are the heavyweights of the testing world. These are designed
             to test the software end-to-end with in a real-world environment.
             You can think of these as driving the automobile on a road to test
             how well it drives. In this test all components of the car are
             working in unison to produce the driving outcome. Integration tests
             are usually the most time-consuming tests to write and are the most
-            difficult to maintain.</p>
+            difficult to maintain.
+        </p>
 
         <h3>Performance Tests</h3>
-        <p>So, the car drives fine in a plane obstacle-free road, but what
+        <p>
+            So, the car drives fine in a plane obstacle-free road, but what
             about when the going gets tough? Performance tests are all about
             testing the program as a whole under stressful conditions. You can
             think of this as driving the car in knee-deep water or driving
@@ -121,7 +129,8 @@
         </p>
 
         <h3>Monitoring</h3>
-        <p>In cloud computing, the major components/modules of a piece of
+        <p>
+            In cloud computing, the major components/modules of a piece of
             software is stored in the cloud and is updated frequently by a
             moderately large group of engineers. To ensure the QoS, the critical
             components of a software are now monitored continuously. The monitor
@@ -137,40 +146,35 @@
             <input type="checkbox" id="alert_threshold_sidenote"
                    class="margin-toggle"/>
             <span class="sidenote">
-                Although monitoring logic could be added to software with relative
-                ease, determining the alert threshold for a monitor usually
+                Although monitoring logic could be added to software with
+                relative ease, determining the alert threshold for a monitor usually
                 takes continual review of the overall alert configuration.
-      </span>
+            </span>
         </p>
 
         <h3>Optics</h3>
         <p>
             While monitors detect instantaneous failures issues, optics are a
-            way
-            of looking at the performance and history of the software in the
-            real
-            world over the long term. Optics for a software may provide insights
-            into its usage (growth of user base), performance (response time
-            during
-            peak and off-peak hours), etc. For our car example, optics would be
-            like
-            collecting and analyzing gas mileage data for the car over a month
-            to
-            verify its actual mileage. A successful optics infrastructure should
+            way of looking at the performance and history of the software in the
+            real world over the long term. Optics for a software may provide
+            insights into its usage (growth of user base), performance (response time
+            during peak and off-peak hours), etc. For our car example, optics would be
+            like collecting and analyzing gas mileage data for the car over a month
+            to verify its actual mileage. A successful optics infrastructure should
             contain a small set of basic reports and the ability to export
-            collected
-            data.
-        </p>
+            collected data.
 
         <label for="optics_usefulness_sidenote"
                class="margin-toggle sidenote-number"></label>
         <input type="checkbox" id="optics_usefulness_sidenote"
                class="margin-toggle"/>
         <span class="sidenote">Both monitoring and optics features can reveal surprising information about the software and even reveal hard to find bugs before it impacts the functionality of the software.</span>
+        </p>
 
         <blockquote>
             <p>Program testing can be used to show the presence of bugs, but
-                never to show their absence!</p>
+                never to show their absence!
+            </p>
             <footer>Edsger W. Dijkstra</footer>
         </blockquote>
 
