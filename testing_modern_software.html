@@ -57,33 +57,31 @@
             industry - the tale from trenches so to speak.</p>
 
         <h3>Unit Test</h3>
-        <p>Unit testing is the first line of defense against those creepy
+        <p>
+            Unit testing is the first line of defense against those creepy
             crawlies. Using TDD (test driven development), you would write a
             test
             for your new piece of code, run the test which will fail, and then
             write code until the test passes. The unit tests are usually
             white-box tests - tests that know how a unit/function operates.
             While building a car, a unit test would be measuring and verifying
-            the current produced by the alternator.
+            the current produced by the alternator.</p>
+        <p>
+        <ul>
+            <li>Unit tests should run within milliseconds time</li>
+            <li>Unit test code coverage should be fairly high >= 95% for your
+            test cases to be effective against regressions or bugs.</li>
+            <li>Unit tests are the best tool for refactoring your legacy code.</li>
+        </ul>
             <label for="unit_test_as_documentation"
                    class="margin-toggle sidenote-number"></label>
             <input type="checkbox" id="unit_test_as_documentation"
                    class="margin-toggle"/>
             <span class="sidenote">
-        Writing and adding unit tests are the most effective form of
-        documentation.  All other documentation methods (e.g., wikis, guides, README) become obsolete
-        over time.
-      </span>
-
-        <ul>
-            <li>Unit tests should run within milliseconds time</li>
-            <li>Unit test code coverage should be fairly high >= 95% for your
-                test
-                cases to be effective against regressions or bugs.
-            </li>
-            <li>Unit tests are the best tool for refactoring your legacy code.
-            </li>
-        </ul>
+                writing and adding unit tests are the most effective form of
+        documentation.  all other documentation methods (e.g., wikis, guides,
+         readme) become obsolete over time.
+            </span>
         </p>
 
         <h3>Functional tests</h3>
@@ -91,7 +89,18 @@
             and services to test the functionality of an entire computer program
             or module. While building a car, functional testing would be
             measuring the torque while running the engine with the input of gas
-            and battery.</p>
+            and battery.
+
+            <label for="sonarqube-sidenote"
+                   class="margin-toggle sidenote-number"></label>
+            <input type="checkbox" id="sonarqube-sidenote"
+                   class="margin-toggle"/>
+            <span class="sidenote">
+                Tools such as <a href="https://www.sonarqube.org">Sonarqube
+            </a> can help you run all unit and functional tests on demand or
+                as part of the CI/CD pipeline.
+            </span>
+        </p>
 
         <h3>Integration Tests</h3>
         <p>These are the heavyweights of the testing world. These are designed
@@ -128,7 +137,9 @@
             <input type="checkbox" id="alert_threshold_sidenote"
                    class="margin-toggle"/>
             <span class="sidenote">
-      Although monitoring logic could be added to software with relative ease, determining the alert threshold for a monitor usually takes continual review of the overall alert configuration.
+                Although monitoring logic could be added to software with relative
+                ease, determining the alert threshold for a monitor usually
+                takes continual review of the overall alert configuration.
       </span>
         </p>
 
