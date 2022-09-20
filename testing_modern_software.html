@@ -64,18 +64,18 @@
             write code until the test passes. The unit tests are usually
             white-box tests - tests that know how a unit/function operates.
             While building a car, a unit test would be measuring and verifying
-            the current produced by the alternator.</p>
-      <label for="unit_test_as_documentation"
-             class="margin-toggle sidenote-number"></label>
-      <input type="checkbox" id="unit_test_as_documentation"
-             class="margin-toggle"/>
-      <span class="sidenote">
+            the current produced by the alternator.
+            <label for="unit_test_as_documentation"
+                   class="margin-toggle sidenote-number"></label>
+            <input type="checkbox" id="unit_test_as_documentation"
+                   class="margin-toggle"/>
+            <span class="sidenote">
         Writing and adding unit tests are the most effective form of
         documentation.  All other documentation methods (e.g., wikis, guides, README) become obsolete
         over time.
       </span>
 
-      <ul>
+        <ul>
             <li>Unit tests should run within milliseconds time</li>
             <li>Unit test code coverage should be fairly high >= 95% for your
                 test
@@ -84,6 +84,7 @@
             <li>Unit tests are the best tool for refactoring your legacy code.
             </li>
         </ul>
+        </p>
 
         <h3>Functional tests</h3>
         <p>The functional tests takes on the dependencies of external libraries
@@ -102,11 +103,13 @@
             difficult to maintain.</p>
 
         <h3>Performance Tests</h3>
-        So, the car drives fine in a plane obstacle-free road, but what about
-        when the going gets tough? Performance tests are all about testing the
-        program as a whole under stressful conditions. You can think of this as
-        driving the car in knee-deep water or driving through a desert under the
-        mid-day heavy sun.
+        <p>So, the car drives fine in a plane obstacle-free road, but what
+            about when the going gets tough? Performance tests are all about
+            testing the program as a whole under stressful conditions. You can
+            think of this as driving the car in knee-deep water or driving
+            through a desert under
+            the mid-day heavy sun.
+        </p>
 
         <h3>Monitoring</h3>
         <p>In cloud computing, the major components/modules of a piece of
@@ -118,26 +121,35 @@
             metric of the service falls below threshold or one of those steps
             fail, the monitor alerts the supporting engineering team. In our car
             example, it would be like checking the battery power and the engine
-            temperature while the car is being driven.</p>
+            temperature while the car is being driven.
 
-        <label for="alert_threshold_sidenote"
-               class="margin-toggle sidenote-number"></label>
-        <input type="checkbox" id="alert_threshold_sidenote"
-               class="margin-toggle"/>
-        <span class="sidenote">
+            <label for="alert_threshold_sidenote"
+                   class="margin-toggle sidenote-number"></label>
+            <input type="checkbox" id="alert_threshold_sidenote"
+                   class="margin-toggle"/>
+            <span class="sidenote">
       Although monitoring logic could be added to software with relative ease, determining the alert threshold for a monitor usually takes continual review of the overall alert configuration.
       </span>
+        </p>
 
         <h3>Optics</h3>
-        While monitors detect instantaneous failures issues, optics are a way
-        of looking at the performance and history of the software in the real
-        world over the long term. Optics for a software may provide insights
-        into its usage (growth of user base), performance (response time during
-        peak and off-peak hours), etc. For our car example, optics would be like
-        collecting and analyzing gas mileage data for the car over a month to
-        verify its actual mileage. A successful optics infrastructure should
-        contain a small set of basic reports and the ability to export collected
-        data.
+        <p>
+            While monitors detect instantaneous failures issues, optics are a
+            way
+            of looking at the performance and history of the software in the
+            real
+            world over the long term. Optics for a software may provide insights
+            into its usage (growth of user base), performance (response time
+            during
+            peak and off-peak hours), etc. For our car example, optics would be
+            like
+            collecting and analyzing gas mileage data for the car over a month
+            to
+            verify its actual mileage. A successful optics infrastructure should
+            contain a small set of basic reports and the ability to export
+            collected
+            data.
+        </p>
 
         <label for="optics_usefulness_sidenote"
                class="margin-toggle sidenote-number"></label>
