@@ -8,7 +8,7 @@ Dr. Nobel Khandaker's personal blog, published as a GitHub Pages **user site**. 
 
 ## Current state
 
-Phases 1–3 of `blog_deployment_plan.md` are in place. The site builds cleanly, has a minimalist serif design, and renders one sample post end-to-end. Phase 4 (SEO polish) onwards have not started.
+Phases 1–4 of `blog_deployment_plan.md` are in place. The site builds cleanly, has a minimalist serif design, renders one sample post end-to-end, and ships full SEO metadata (canonical, Open Graph, Twitter Cards, JSON-LD `BlogPosting`). Phase 5 (search) onwards have not started.
 
 **Phase 1 — toolchain (done)**
 - `.ruby-version` → `3.3.5`
@@ -28,6 +28,30 @@ Phases 1–3 of `blog_deployment_plan.md` are in place. The site builds cleanly,
 - `pages/about.md` and `pages/archive.md` were pulled forward from the plan's Phase 14 per a review-comment recommendation, so the nav has real destinations from day one.
 - `_includes/reading-time.html` rounds **up** with `divided_by: 200.0 | ceil` and clamps to 1 minute, fixing the "0 min" undercount the plan's Liquid-integer formula would have produced for short posts.
 - Build is clean (zero warnings) and all 11 routes (home, post, about, archive, tag, category, 404, css, js, feed, sitemap) return 200 from `bundle exec rake serve`.
+
+**Phase 4 — SEO (done)**
+- `{% seo %}` in `_includes/head.html` emits canonical link, full Open Graph block, Twitter Card meta, and JSON-LD (`BlogPosting` for posts, `WebSite` for the homepage). The plan's idea of writing a custom `_includes/schema-article.html` was not needed — `jekyll-seo-tag` already covers `headline`, `datePublished`, `dateModified`, `author`, `mainEntityOfPage`, and (when `page.image` is set) `image`.
+- **Author config is split between two keys** — see the long comment at the top of `_config.yml`. `site.author` is a string (just the name) so jekyll-seo-tag can't fall through to its broken Twitter handle inference. `site.owner` is a hash with structured data (email, github, …) consumed only by our own templates (`footer.html`, `social-icons.html`).
+- `site.twitter` and `site.social` are **intentionally absent** — both have known footguns when configured without complete data. Comments in `_config.yml` describe what to add and when.
+- `robots.txt` is an explicit Liquid-templated file at the repo root (overrides the one `jekyll-sitemap` would auto-generate); the sitemap URL re-resolves automatically when `site.url` flips to `https://zerodowntime.dev` in Phase 11.
+- `webmaster_verifications:` is stubbed (commented) in `_config.yml`. It activates in Phase 11 once the custom domain is verified in Google Search Console / Bing Webmaster Tools.
+
+## Writing a post
+
+Posts live in `_posts/` and follow Jekyll's `YYYY-MM-DD-slug.md` naming. `layout: post` and `comments: true` are applied automatically via the `_config.yml` defaults block, so they don't need to appear in the front matter. Standard schema:
+
+```yaml
+---
+title: "Title in title case"
+date: 2026-04-21 09:00:00 -0400               # required, with timezone offset
+description: "150–160 char meta description."  # used by SEO + OG; don't just repeat the title
+image: /assets/img/posts/2026-04-21-slug.png   # optional; enables OG/Twitter hero card
+tags: [reliability, postgres]                  # optional; routes to /tag/<name>/ via jekyll-archives
+categories: [systems]                          # optional; routes to /category/<name>/
+---
+```
+
+Use `<!--more-->` to mark the excerpt cut. The home page shows everything before the marker. The reading-time helper rounds up and clamps to 1 minute, so even a one-paragraph note shows "1 min" rather than "0 min".
 
 ## Toolchain
 

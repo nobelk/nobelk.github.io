@@ -1,15 +1,15 @@
 <div class="social-icons">
-  {%- if site.author.github -%}
-    <a href="https://github.com/{{ site.author.github }}" rel="me" aria-label="GitHub">GitHub</a>
+  {%- if site.owner.github -%}
+    <a href="https://github.com/{{ site.owner.github }}" rel="me" aria-label="GitHub">GitHub</a>
   {%- endif -%}
-  {%- if site.author.twitter -%}
-    <a href="https://twitter.com/{{ site.author.twitter }}" rel="me" aria-label="Twitter">Twitter</a>
+  {%- if site.owner.twitter -%}
+    <a href="https://twitter.com/{{ site.owner.twitter }}" rel="me" aria-label="Twitter">Twitter</a>
   {%- endif -%}
-  {%- if site.author.mastodon -%}
-    <a href="{{ site.author.mastodon }}" rel="me" aria-label="Mastodon">Mastodon</a>
+  {%- if site.owner.mastodon -%}
+    <a href="{{ site.owner.mastodon }}" rel="me" aria-label="Mastodon">Mastodon</a>
   {%- endif -%}
-  {%- if site.author.linkedin -%}
-    <a href="https://linkedin.com/in/{{ site.author.linkedin }}" rel="me" aria-label="LinkedIn">LinkedIn</a>
+  {%- if site.owner.linkedin -%}
+    <a href="https://linkedin.com/in/{{ site.owner.linkedin }}" rel="me" aria-label="LinkedIn">LinkedIn</a>
   {%- endif -%}
   <a href="{{ '/feed.xml' | relative_url }}" aria-label="RSS feed">RSS</a>
 </div>

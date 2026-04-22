@@ -11,7 +11,16 @@ url: https://nobelk.github.io
 baseurl: ""
 lang: en
 
-author:
+# IMPORTANT: keep `author` as a string (not a hash) for jekyll-seo-tag.
+# When `author` is a hash without an explicit `twitter` key, jekyll-seo-tag's
+# AuthorDrop silently falls back to `author.name` and emits a malformed
+# <meta name="twitter:creator" content="@Display Name">. Passing a string
+# bypasses that fallback while still producing a clean JSON-LD Person.
+author: Dr. Nobel Khandaker
+
+# Structured owner data for OUR templates (footer, social icons, etc).
+# Don't move this into `author:` — see note above.
+owner:
   name: Dr. Nobel Khandaker
   email: nobel@intramotev.com
   github: nobelk
@@ -19,6 +28,32 @@ author:
   # twitter: nobelk
   # mastodon: https://hachyderm.io/@nobelk
   # linkedin: nobelk
+
+# `social:` is INTENTIONALLY OMITTED. On `homepage_or_about` pages,
+# jekyll-seo-tag uses `site.social.name` to override the JSON-LD `name`,
+# which conflates Person schema with WebSite schema — the homepage would
+# emit `name: "Dr. Nobel Khandaker"` instead of `name: "Zero Downtime"`.
+# Re-enable once there are multiple social profiles worth `sameAs`-linking,
+# AND set `social.name` equal to `site.title` to preserve the site's name:
+#   social:
+#     name: Zero Downtime
+#     links:
+#       - https://github.com/nobelk
+#       - https://...
+
+# Twitter card config is INTENTIONALLY OMITTED until a real handle exists.
+# Defining `site.twitter` (even a hash with no username) makes jekyll-seo-tag
+# emit <meta name="twitter:site" content="@">, which is broken metadata.
+# When you have a handle, add:
+#   twitter:
+#     username: nobelk
+#     card: summary_large_image
+
+# Phase 11 will populate these once the custom domain is verified in
+# Google Search Console and Bing Webmaster Tools (DNS TXT or HTML file).
+# webmaster_verifications:
+#   google: ""
+#   bing: ""
 
 # Build behavior
 markdown: kramdown
