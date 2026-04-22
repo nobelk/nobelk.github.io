@@ -12,6 +12,7 @@
   margin: 0 0 0.4rem;
   font-size: 1.5rem;
 }
+
 .post-summary h2 a {
   color: $color-text;
   text-decoration: none;
@@ -49,6 +50,7 @@
   font-size: 0.9rem;
   color: $color-text-muted;
 }
+
 .post-tags a {
   color: $color-text-muted;
   text-decoration: none;
@@ -66,12 +68,14 @@
   padding: 0;
   margin: 0 0 1.6em;
 }
+
 .archive-list li {
   display: flex;
   gap: 0.8rem;
   padding: 0.35em 0;
   border-bottom: 1px dotted $color-border;
 }
+
 .archive-list time {
   color: $color-text-muted;
   font-variant-numeric: tabular-nums;
@@ -88,6 +92,7 @@
   padding: 1.5rem 0;
   border-top: 1px solid $color-border;
 }
+
 .pagination__current {
   color: $color-text-muted;
   font-size: 0.9rem;
@@ -98,6 +103,7 @@
   padding-top: 1.5rem;
   border-top: 1px solid $color-border;
 }
+
 .comments__heading {
   font-size: 1.25rem;
   margin: 0 0 1rem;

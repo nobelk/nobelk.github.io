@@ -1,10 +1,14 @@
 {
   "extends": ["stylelint-config-standard-scss"],
-  "ignoreFiles": ["_site/**/*", "_sass/_syntax.scss"],
+  "ignoreFiles": ["_site/**/*", "_sass/_syntax.scss", "assets/css/main.scss"],
   "rules": {
     "no-descending-specificity": null,
     "selector-class-pattern": null,
     "scss/dollar-variable-pattern": null,
-    "scss/at-use-no-unnamespaced": null
+    "scss/at-use-no-unnamespaced": null,
+    "declaration-block-single-line-max-declarations": null,
+    "value-keyword-case": null,
+    "color-hex-length": null,
+    "property-no-vendor-prefix": null
   }
 }

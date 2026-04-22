@@ -10,6 +10,7 @@ No posts yet — check back soon.
 {% else %}
 {% assign posts_by_year = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
 {% for year in posts_by_year %}
+
 ## {{ year.name }}
 
 <ul class="archive-list">

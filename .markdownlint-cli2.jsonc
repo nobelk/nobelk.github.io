@@ -19,6 +19,10 @@
     "_site/**",
     "node_modules/**",
     "vendor/**",
-    ".jekyll-cache/**"
+    ".jekyll-cache/**",
+    // Internal docs — not shipped with the site, so the markdown rules for
+    // rendered prose (heading spacing, fence languages) don't apply.
+    "CLAUDE.md",
+    "blog_deployment_plan.md"
   ]
 }

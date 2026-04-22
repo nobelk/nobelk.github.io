@@ -36,6 +36,11 @@ jobs:
 
       - run: npm ci
 
+      # Lint before build so style/markdown regressions fail fast, before we
+      # pay for the Jekyll + Pagefind pipeline.
+      - name: Lint (stylelint + markdownlint)
+        run: npm run lint
+
       # Explicit JEKYLL_ENV so conditionals (e.g. analytics.html) ship the right
       # markup; defaults to "development" otherwise.
       - name: Build site + search index
