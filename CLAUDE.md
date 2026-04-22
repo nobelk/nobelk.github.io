@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository purpose
 
-Dr. Nobel Khandaker's personal blog, published as a GitHub Pages **user site**. The repo name `nobelk.github.io` matches the `<username>.github.io` convention, so GitHub Pages serves the site from the default branch at `https://nobelk.github.io/`.
+Dr. Nobel Khandaker's personal blog. The repo follows the GitHub Pages user-site convention (`<username>.github.io`), but the site is served at the **custom domain `https://zerodowntime.dev`** via the `CNAME` file at the repo root. Don't change `CNAME` or `_config.yml`'s `url:` without coordinating with whatever DNS / GitHub-Pages settings are upstream.
 
 ## Current state
 
-Phases 1–4 of `blog_deployment_plan.md` are in place. The site builds cleanly, has a minimalist serif design, renders one sample post end-to-end, and ships full SEO metadata (canonical, Open Graph, Twitter Cards, JSON-LD `BlogPosting`). Phase 5 (search) onwards have not started.
+Phases 1–5 of `blog_deployment_plan.md` are in place. The site builds cleanly, has a minimalist serif design, renders one sample post end-to-end, ships full SEO metadata (canonical, Open Graph, Twitter Cards, JSON-LD `BlogPosting`), and has a working static search index via Pagefind. The custom domain `zerodowntime.dev` is live; `_config.yml`'s `url:` and the `CNAME` file at the repo root reflect that. Phase 6 (RSS polish) onwards have not started.
 
 **Phase 1 — toolchain (done)**
 - `.ruby-version` → `3.3.5`
@@ -34,7 +34,15 @@ Phases 1–4 of `blog_deployment_plan.md` are in place. The site builds cleanly,
 - **Author config is split between two keys** — see the long comment at the top of `_config.yml`. `site.author` is a string (just the name) so jekyll-seo-tag can't fall through to its broken Twitter handle inference. `site.owner` is a hash with structured data (email, github, …) consumed only by our own templates (`footer.html`, `social-icons.html`).
 - `site.twitter` and `site.social` are **intentionally absent** — both have known footguns when configured without complete data. Comments in `_config.yml` describe what to add and when.
 - `robots.txt` is an explicit Liquid-templated file at the repo root (overrides the one `jekyll-sitemap` would auto-generate); the sitemap URL re-resolves automatically when `site.url` flips to `https://zerodowntime.dev` in Phase 11.
-- `webmaster_verifications:` is stubbed (commented) in `_config.yml`. It activates in Phase 11 once the custom domain is verified in Google Search Console / Bing Webmaster Tools.
+- `webmaster_verifications:` is stubbed (commented) in `_config.yml`. Activate it after registering the domain in Google Search Console / Bing Webmaster Tools.
+
+**Phase 5 — Search (done, Pagefind)**
+- Added `package.json` with `pagefind` as a devDependency. `bundle install` is no longer enough for a fresh clone — also run `npm install` once. The pagefind binary downloads via npm postinstall and is then invoked by the Rakefile.
+- `Rakefile`'s `rake build` task now runs **jekyll build → `npx -y pagefind --site _site`** in sequence. CI just calls `rake build`. Local `rake serve` does **not** run pagefind, so search is non-functional during live-reload dev — that's an explicit trade-off, since pagefind would race against jekyll's `--watch` rebuilds. To test search locally: `rake build && (cd _site && python3 -m http.server)`.
+- Search UI lives at `/search/` (linked from the top nav). The Default UI is loaded only on that page, so other pages don't pay the ~50 KB JS cost. The search include has a guarded fallback: if `pagefind-ui.js` is missing, it shows a "run rake build" hint instead of a blank widget.
+- **Indexing scope** uses Pagefind's implicit-ignore rule: any page on the site that has a `data-pagefind-body` attribute "claims" the index, and pages without it are auto-excluded. `post.html` always carries the attribute on its `<article>`. `page.html` adds it conditionally (`{% unless page.pagefind == false %}`), so per-page front-matter `pagefind: false` opts a page out. `archive.md` and `search.md` use that opt-out — archive is a post-title list that would dilute results, and the search page indexing itself is meta-noise.
+- `robots.txt` carries `Disallow: /pagefind/` so crawlers don't waste budget on the index files.
+- Pagefind 1.5.2's CLI prints a recommendation to migrate to the new "Component UI" — that's a future polish item, not required. The Default UI remains supported.
 
 ## Writing a post
 
@@ -48,10 +56,13 @@ description: "150–160 char meta description."  # used by SEO + OG; don't just 
 image: /assets/img/posts/2026-04-21-slug.png   # optional; enables OG/Twitter hero card
 tags: [reliability, postgres]                  # optional; routes to /tag/<name>/ via jekyll-archives
 categories: [systems]                          # optional; routes to /category/<name>/
+pagefind: false                                # optional; opt this post out of search indexing
 ---
 ```
 
 Use `<!--more-->` to mark the excerpt cut. The home page shows everything before the marker. The reading-time helper rounds up and clamps to 1 minute, so even a one-paragraph note shows "1 min" rather than "0 min".
+
+`pagefind: false` is rarely needed for posts (you usually want them searchable) — it's there for unusual cases like a post that's pure embed/redirect.
 
 ## Toolchain
 

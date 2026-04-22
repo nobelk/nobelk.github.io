@@ -1,0 +1,12 @@
+{
+  "name": "zero-downtime-blog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Build helpers for the Zero Downtime blog. Currently just Pagefind, which generates a static search index over _site/.",
+  "scripts": {
+    "index": "pagefind --site _site"
+  },
+  "devDependencies": {
+    "pagefind": "^1.4.0"
+  }
+}

@@ -2,12 +2,13 @@ require 'rake'
 
 SITE_DIR = '_site'.freeze
 
-desc 'Build the site into _site (honors JEKYLL_ENV)'
+desc 'Build the site into _site (jekyll + pagefind search index; honors JEKYLL_ENV)'
 task :build do
   sh 'bundle exec jekyll build'
+  sh 'npx -y pagefind --site _site'
 end
 
-desc 'Serve the site locally with live reload at http://localhost:4000'
+desc 'Serve the site locally with live reload at http://localhost:4000 (search is unavailable in this mode — run `rake build` and serve _site to test it)'
 task :serve do
   sh 'bundle exec jekyll serve --livereload --drafts'
 end

@@ -2,6 +2,7 @@
 layout: page
 title: Archive
 permalink: /archive/
+pagefind: false
 ---
 
 {% if site.posts.size == 0 %}

@@ -1,0 +1,26 @@
+<link rel="stylesheet" href="{{ '/pagefind/pagefind-ui.css' | relative_url }}">
+<script src="{{ '/pagefind/pagefind-ui.js' | relative_url }}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var el = document.getElementById("search");
+    if (!el) return;
+    if (typeof PagefindUI === "undefined") {
+      var p = document.createElement("p");
+      var em = document.createElement("em");
+      em.appendChild(document.createTextNode("Search index not available. Run "));
+      var code = document.createElement("code");
+      code.textContent = "bundle exec rake build";
+      em.appendChild(code);
+      em.appendChild(document.createTextNode(" to generate it."));
+      p.appendChild(em);
+      el.replaceChildren(p);
+      return;
+    }
+    new PagefindUI({
+      element: "#search",
+      showImages: false,
+      showSubResults: true,
+      resetStyles: false
+    });
+  });
+</script>

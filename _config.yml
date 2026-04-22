@@ -5,9 +5,7 @@ description: >-
   Technical writing on distributed systems, reliability, and operational
   excellence by Dr. Nobel Khandaker.
 
-# NOTE: Until Phase 11 stands up the custom domain, the site deploys to the
-# user-pages URL. Switch this to https://zerodowntime.dev when DNS + cert are live.
-url: https://nobelk.github.io
+url: https://zerodowntime.dev
 baseurl: ""
 lang: en
 
@@ -114,5 +112,7 @@ exclude:
   - mise.toml
   - vendor
   - node_modules
+  - package.json
+  - package-lock.json
   - .bundle
   - .ruby-version
