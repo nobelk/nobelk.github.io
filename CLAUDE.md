@@ -8,7 +8,9 @@ Dr. Nobel Khandaker's personal blog. The repo follows the GitHub Pages user-site
 
 ## Current state
 
-Phases 1–5 of `blog_deployment_plan.md` are in place. The site builds cleanly, has a minimalist serif design, renders one sample post end-to-end, ships full SEO metadata (canonical, Open Graph, Twitter Cards, JSON-LD `BlogPosting`), and has a working static search index via Pagefind. The custom domain `zerodowntime.dev` is live; `_config.yml`'s `url:` and the `CNAME` file at the repo root reflect that. Phase 6 (RSS polish) onwards have not started.
+Phases 1–10 and 12 of `blog_deployment_plan.md` are in place. Phase 11 (custom domain) was done out-of-order in the earlier sessions. Phase 13 is a pre-launch verification checklist — the current run of `rake build && rake test` passes cleanly. Phase 14 (post-launch polish) is still open by design.
+
+Three features ship *code-complete but activation-gated*: giscus comments, Plausible analytics, and KaTeX/Mermaid on-page toggles. They render nothing until the operator fills in the `_config.yml` block or adds the per-post front-matter flag. Details in the per-phase notes below.
 
 **Phase 1 — toolchain (done)**
 - `.ruby-version` → `3.3.5`
@@ -44,6 +46,42 @@ Phases 1–5 of `blog_deployment_plan.md` are in place. The site builds cleanly,
 - `robots.txt` carries `Disallow: /pagefind/` so crawlers don't waste budget on the index files.
 - Pagefind 1.5.2's CLI prints a recommendation to migrate to the new "Component UI" — that's a future polish item, not required. The Default UI remains supported.
 
+**Phase 6 — RSS (done)**
+- `/feed.xml` comes from `jekyll-feed`; discovery link is emitted once by `{% feed_meta %}` in `_includes/head.html`. The previous hand-rolled `<link rel="alternate">` was removed to avoid a duplicate self-referential tag that some aggregators flag.
+- Visible RSS entry points: the footer, the `social-icons` include, and `about.md`.
+- JSON Feed (`/feed.json`) is **not** implemented — the plan marked it optional and most RSS clients still want Atom.
+
+**Phase 7 — Comments (code-complete, activation-gated)**
+- Strategy: giscus (GitHub Discussions) over Disqus, per the plan's trade-off table.
+- Gate lives in `_includes/comments.html`: widget only renders when `page.comments` **and** `site.giscus.repo_id.size > 0`. The `.size > 0` form is deliberate — a bare `!= ""` check lets nil values through because Liquid evaluates `nil != ""` as `true`.
+- `_config.yml` carries a `giscus:` block with blank `repo`, `repo_id`, `category`, `category_id`. **To activate**: enable Discussions on the GitHub repo, install the `giscus` GitHub App, fill the form at <https://giscus.app>, paste the emitted IDs into `_config.yml`. No template edits needed after that.
+- `data-mapping: pathname` is intentional — renaming a post breaks the thread less often than title-mapping, and pathname won't shift when `site.url` changes.
+
+**Phase 8 — Analytics (code-complete, activation-gated)**
+- Strategy: Plausible.
+- Gate lives in `_includes/analytics.html`: tag only renders when `jekyll.environment == "production"` **and** `site.plausible.domain.size > 0`. Same `.size > 0` reasoning as comments.
+- `_config.yml` carries a `plausible:` block with `domain: ""` and an optional `script_src` override (for domain-proxied deployments that dodge tracker-blockers). **To activate**: create a Plausible site, set `domain: "zerodowntime.dev"`. Local `rake serve` stays silent because `JEKYLL_ENV` defaults to `development`; the Actions workflow sets `JEKYLL_ENV=production`.
+
+**Phase 9 — Highlighting + math + diagrams (done)**
+- Rouge theme generated via `bundle exec rougify style github > _sass/_syntax.scss` and pulled in by `main.scss` via `@use "syntax"`. `.stylelintrc.json` ignores `_sass/_syntax.scss` because it's tool-generated.
+- KaTeX and Mermaid are **opt-in per post**: add `math: true` or `mermaid: true` to front matter. `_includes/head.html` conditionally pulls in `math.html` / `mermaid.html`, which load the libraries from jsDelivr. Both are unpinned beyond a hard-coded CDN version string in the include (bump there to upgrade).
+- Mermaid's include rewrites kramdown's `<pre><code class="language-mermaid">` into the `<pre class="mermaid">` shape Mermaid expects before calling `mermaid.run()`. `securityLevel: "strict"` is set so pasted-example diagrams can't execute scripts or click-handlers.
+
+**Phase 10 — Quality gates (done, with divergence from the plan's tool list)**
+- Kept: `html-proofer` (internal links on every build, externals on a weekly schedule — see the external-links workflow), `rubocop`.
+- Added: `stylelint` + `stylelint-config-standard-scss` and `markdownlint-cli2`, with `.stylelintrc.json` and `.markdownlint-cli2.jsonc` tuned for prose-heavy content. Run via `npm run lint`.
+- Dropped: `w3c_validators` (not replaced — modern browsers already surface most violations, and the added Ruby dep isn't worth the marginal signal) and `scss_lint` (stylelint is its modern successor). This is an intentional divergence from section 0 of `blog_deployment_plan.md`.
+
+**Phase 11 — Custom domain (done)**
+- `CNAME` at the repo root contains `zerodowntime.dev`.
+- `_config.yml` uses `url: https://zerodowntime.dev`. Do not change without coordinating DNS / Pages custom-domain settings — `.dev` TLDs are on HSTS preload, so a mis-timed DNS cutover makes the site unreachable, not just downgraded.
+- `webmaster_verifications:` in `_config.yml` is still commented out — activate after registering with Google Search Console and Bing Webmaster Tools.
+
+**Phase 12 — CI/CD (done)**
+- `.github/workflows/deploy.yml` runs on push to `main` and on PRs to `main`: checks out with `fetch-depth: 0` (so `jekyll-last-modified-at` can read full git history), sets up Ruby 3.3.5 + Node 20, runs `npm ci`, then `JEKYLL_ENV=production bundle exec rake build`, then `bundle exec rake test`, then uploads the `_site` artifact. `deploy` only runs on push events to `main`.
+- `.github/workflows/external-links.yml` runs weekly (Mondays 12:00 UTC) and on manual dispatch. It's `continue-on-error: true` so upstream outages don't page anyone. This is the Phase-10 "external link validation" deferred off the hot path.
+- **Don't run `rake test` before upload** — the Rakefile's `test` task validates the existing `_site`, never rebuilds it, which the plan's original workflow got wrong (Review Comment #1 in `blog_deployment_plan.md`). Running `build → test → upload` keeps a single authoritative artifact.
+
 ## Writing a post
 
 Posts live in `_posts/` and follow Jekyll's `YYYY-MM-DD-slug.md` naming. `layout: post` and `comments: true` are applied automatically via the `_config.yml` defaults block, so they don't need to appear in the front matter. Standard schema:
@@ -57,6 +95,9 @@ image: /assets/img/posts/2026-04-21-slug.png   # optional; enables OG/Twitter he
 tags: [reliability, postgres]                  # optional; routes to /tag/<name>/ via jekyll-archives
 categories: [systems]                          # optional; routes to /category/<name>/
 pagefind: false                                # optional; opt this post out of search indexing
+math: true                                     # optional; load KaTeX (auto-render $…$ and $$…$$)
+mermaid: true                                  # optional; render ```mermaid fences as diagrams
+comments: false                                # optional; hide giscus on this post (defaults to true)
 ---
 ```
 
@@ -74,9 +115,11 @@ Requires Ruby 3.3.5 (see `.ruby-version`). The macOS system Ruby (2.6.x) is too 
 
 ```
 bundle install                 # once, after cloning or Gemfile changes
+npm install                    # once, after cloning or package.json changes (Pagefind + linters)
 bundle exec rake serve         # live-reload dev server at http://localhost:4000 (includes _drafts/)
 bundle exec rake build         # one-shot build into _site/
 bundle exec rake test          # html-proofer against _site/ (internal links only; externals deferred to a scheduled job)
+npm run lint                   # stylelint (SCSS) + markdownlint-cli2 (posts and pages)
 ```
 
 `rake serve` shows drafts; `rake build` (and therefore CI) does not.

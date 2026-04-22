@@ -92,3 +92,13 @@
   color: $color-text-muted;
   font-size: 0.9rem;
 }
+
+.comments {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid $color-border;
+}
+.comments__heading {
+  font-size: 1.25rem;
+  margin: 0 0 1rem;
+}

@@ -1,0 +1,16 @@
+{%- comment -%}
+KaTeX — Phase 9. Opt-in per post by adding `math: true` to front matter so
+pages that don't need math don't pay the ~200 KB CSS+JS cost.
+
+Version pinned deliberately: CDN assets under a floating version can change
+without warning. Upgrade by bumping `katex_version` in one place.
+
+SRI hashes are not included here. Add them when pinning a version for
+production — see https://katex.org/docs/autoload for the canonical values.
+{%- endcomment -%}
+{%- assign katex_version = "0.16.11" -%}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@{{ katex_version }}/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@{{ katex_version }}/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@{{ katex_version }}/dist/contrib/auto-render.min.js"
+        crossorigin="anonymous"
+        onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false}]});"></script>

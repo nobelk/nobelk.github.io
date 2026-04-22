@@ -1,0 +1,24 @@
+{
+  "config": {
+    "default": true,
+    // MD013: line-length — prose doesn't benefit from a hard wrap; posts often
+    // include long links and sentences that shouldn't be broken mechanically.
+    "MD013": false,
+    // MD033: inline HTML — Jekyll posts embed layout HTML (e.g. anchor tags with
+    // `rel="noopener"`, <sup>, <kbd>) that kramdown can't express otherwise.
+    "MD033": false,
+    // MD041: first-line h1 — posts start with front matter + prose, not an h1.
+    "MD041": false,
+    // MD034: bare URLs — allow in quoted command examples and copy-paste snippets.
+    "MD034": false,
+    // MD024: siblings_only for duplicate headings so year-grouped archive pages
+    // (where every year has "## 2026" / "## 2025") don't falsely fail.
+    "MD024": { "siblings_only": true }
+  },
+  "ignores": [
+    "_site/**",
+    "node_modules/**",
+    "vendor/**",
+    ".jekyll-cache/**"
+  ]
+}

@@ -53,6 +53,36 @@ owner:
 #   google: ""
 #   bing: ""
 
+# Comments (giscus) — Phase 7.
+# The include at _includes/comments.html checks `site.giscus.repo_id` before
+# emitting anything, so leaving these blank keeps the widget off rather than
+# rendering a broken one. To activate:
+#   1. Enable Discussions in the repo's Settings → General → Features.
+#   2. Install the giscus GitHub App: https://github.com/apps/giscus
+#   3. Visit https://giscus.app and walk the form against this repo; copy the
+#      `data-*` values it emits into the fields below.
+# `mapping: pathname` ties each thread to a post's URL path — safer than
+# `title` (renames break threads) or `og:url` (changes with site.url flips).
+giscus:
+  repo: ""           # "owner/name"
+  repo_id: ""        # opaque id from giscus.app
+  category: ""       # Discussion category name (e.g. "Comments")
+  category_id: ""    # opaque id from giscus.app
+  mapping: pathname
+  reactions_enabled: 1
+  input_position: bottom
+  theme: light
+  lang: en
+
+# Analytics (Plausible) — Phase 8.
+# Script only ships when BOTH `site.plausible.domain` is set AND
+# jekyll.environment == "production", so local `rake serve` runs stay silent.
+# Set `script_src` only if proxying through your own domain; otherwise leave
+# blank and the include uses the default Plausible CDN.
+plausible:
+  domain: ""                 # e.g. "zerodowntime.dev"
+  script_src: ""             # optional proxy URL; blank = https://plausible.io/js/script.js
+
 # Build behavior
 markdown: kramdown
 highlighter: rouge

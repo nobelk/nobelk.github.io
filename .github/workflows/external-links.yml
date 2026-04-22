@@ -1,0 +1,54 @@
+# External link validation — runs on a weekly schedule, not on every push.
+# Rationale (Review comment #2 in blog_deployment_plan.md): running html-proofer
+# with `disable_external: false` against third-party URLs on every push means
+# upstream outages, rate limits, and bot-blocking pages fail your deploys for
+# reasons unrelated to your own changes. We run it weekly so rot is caught
+# within days, and this job is allowed to fail without blocking merges.
+
+name: External Link Check
+
+on:
+  schedule:
+    - cron: '0 12 * * 1'   # Mondays at 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.5'
+          bundler-cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build site
+        env:
+          JEKYLL_ENV: production
+        run: bundle exec rake build
+
+      - name: html-proofer (external links enabled)
+        run: |
+          bundle exec ruby -e '
+            require "html-proofer"
+            HTMLProofer.check_directory(
+              "_site",
+              disable_external: false,
+              enforce_https: true,
+              check_html: true,
+              allow_missing_href: false,
+              hydra: { max_concurrency: 5 },
+              typhoeus: { followlocation: true, connecttimeout: 10, timeout: 30 }
+            ).run
+          '

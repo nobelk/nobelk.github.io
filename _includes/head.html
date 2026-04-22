@@ -11,8 +11,14 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap">
 
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
-  <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="{{ '/feed.xml' | relative_url }}">
 
+  {%- comment -%}
+  `{% feed_meta %}` emits the <link rel="alternate" type="application/atom+xml">
+  for /feed.xml — don't hand-roll it above or the aggregators see a duplicate.
+  {%- endcomment -%}
   {% seo %}
   {% feed_meta %}
+
+  {%- if page.math -%}{% include math.html %}{%- endif -%}
+  {%- if page.mermaid -%}{% include mermaid.html %}{%- endif -%}
 </head>

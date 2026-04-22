@@ -1,5 +1,14 @@
 {%- comment -%}
-Analytics include — Phase 8 wires this to a chosen provider (Plausible recommended).
-The provider snippet must be gated on `jekyll.environment == "production"` so local
-builds don't pollute stats. Intentionally empty until Phase 8.
+Plausible Analytics — Phase 8. Ships only when:
+  - jekyll.environment == "production"   (set in the Actions workflow)
+  - site.plausible.domain is populated   (acts as an activation gate)
+Both guards are required; local `rake serve` is development, so stats stay clean.
 {%- endcomment -%}
+{%- comment -%}
+Use `.size > 0` rather than `!= ""`: in Liquid, `nil != ""` is TRUE, so an
+unset key would satisfy a bare inequality check and render an empty-domain tag.
+{%- endcomment -%}
+{%- if jekyll.environment == "production" and site.plausible.domain.size > 0 -%}
+  {%- assign plausible_src = site.plausible.script_src | default: "https://plausible.io/js/script.js" -%}
+  <script defer data-domain="{{ site.plausible.domain }}" src="{{ plausible_src }}"></script>
+{%- endif -%}

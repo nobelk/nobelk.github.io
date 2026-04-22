@@ -2,11 +2,17 @@
   "name": "zero-downtime-blog",
   "version": "1.0.0",
   "private": true,
-  "description": "Build helpers for the Zero Downtime blog. Currently just Pagefind, which generates a static search index over _site/.",
+  "description": "Build helpers for the Zero Downtime blog. Pagefind generates the static search index; stylelint and markdownlint cover Phase 10 quality gates (see blog_deployment_plan.md).",
   "scripts": {
-    "index": "pagefind --site _site"
+    "index": "pagefind --site _site",
+    "lint:css": "stylelint \"_sass/**/*.scss\" \"assets/css/**/*.scss\"",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"!_site/**\" \"!node_modules/**\" \"!vendor/**\"",
+    "lint": "npm run lint:css && npm run lint:md"
   },
   "devDependencies": {
-    "pagefind": "^1.4.0"
+    "markdownlint-cli2": "^0.13.0",
+    "pagefind": "^1.4.0",
+    "stylelint": "^16.6.0",
+    "stylelint-config-standard-scss": "^13.1.0"
   }
 }

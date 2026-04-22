@@ -1,0 +1,65 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # jekyll-last-modified-at reads git history for every post.
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.5'
+          bundler-cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      # Explicit JEKYLL_ENV so conditionals (e.g. analytics.html) ship the right
+      # markup; defaults to "development" otherwise.
+      - name: Build site + search index
+        env:
+          JEKYLL_ENV: production
+        run: bundle exec rake build
+
+      # Validates the _site produced above — does NOT rebuild (see Rakefile).
+      # External links are checked by external-links.yml on a schedule; keeping
+      # them out of the push path avoids third-party flakiness breaking deploys.
+      - name: Validate (html-proofer, internal links only)
+        run: bundle exec rake test
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

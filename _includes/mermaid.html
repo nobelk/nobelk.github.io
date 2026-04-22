@@ -1,0 +1,26 @@
+{%- comment -%}
+Mermaid — Phase 9. Opt-in per post by adding `mermaid: true` to front matter.
+
+kramdown wraps a fenced ```mermaid block as <pre><code class="language-mermaid">,
+not the bare <pre class="mermaid"> Mermaid expects. We rewrite those blocks
+into Mermaid's expected shape before calling `mermaid.run()`.
+
+`securityLevel: "strict"` — refuse to render diagrams containing <script> or
+click-handlers. Safer default for a blog whose authors may paste examples.
+{%- endcomment -%}
+{%- assign mermaid_version = "10.9.1" -%}
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@{{ mermaid_version }}/dist/mermaid.esm.min.mjs";
+  document.querySelectorAll("pre > code.language-mermaid").forEach(function (code) {
+    var pre = code.parentElement;
+    var wrapper = pre.parentElement && pre.parentElement.classList.contains("highlighter-rouge")
+      ? pre.parentElement
+      : pre;
+    var replacement = document.createElement("pre");
+    replacement.className = "mermaid";
+    replacement.textContent = code.textContent;
+    wrapper.replaceWith(replacement);
+  });
+  mermaid.initialize({ startOnLoad: false, theme: "default", securityLevel: "strict" });
+  mermaid.run();
+</script>

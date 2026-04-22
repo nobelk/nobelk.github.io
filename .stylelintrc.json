@@ -1,0 +1,10 @@
+{
+  "extends": ["stylelint-config-standard-scss"],
+  "ignoreFiles": ["_site/**/*", "_sass/_syntax.scss"],
+  "rules": {
+    "no-descending-specificity": null,
+    "selector-class-pattern": null,
+    "scss/dollar-variable-pattern": null,
+    "scss/at-use-no-unnamespaced": null
+  }
+}
