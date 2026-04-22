@@ -2,6 +2,10 @@
 layout: page
 title: About
 permalink: /about/
+description: >-
+  About Dr. Nobel Khandaker — writing on reliable distributed systems,
+  multiagents, reliability engineering, and the practice of keeping software
+  running.
 ---
 
 I'm Dr. Nobel Khandaker. **Zero Downtime** is where I write about distributed

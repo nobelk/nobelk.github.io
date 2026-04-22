@@ -1,9 +1,10 @@
 # Site identity
 title: Zero Downtime
-tagline: Notes on building systems that don't fall over
+tagline: Notes on building reliable distributed systems with multiagents
 description: >-
-  Technical writing on distributed systems, reliability, and operational
-  excellence by Dr. Nobel Khandaker.
+  Technical writing by Dr. Nobel Khandaker on building reliable distributed
+  systems with multiagents — architecture, reliability, and operational
+  excellence.
 
 url: https://zerodowntime.dev
 baseurl: ""
