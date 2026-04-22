@@ -13,6 +13,7 @@ systems, reliability engineering, and the day-to-day practice of keeping softwar
 running when the world is doing its best to knock it over.
 
 Most posts here will be one of three kinds:
+
 - **Multiagent systems** - implementation of tools and frameworks that are built on the theoretical foundations of multiagent systems
 - **Reliability patterns** — backpressure, idempotency, exactly-once illusions,
   and where their assumptions quietly break.
