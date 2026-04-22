@@ -52,7 +52,7 @@ cheaply enough that instrumentation doesn't dominate the workflow's own cost.
 
 ## Architecture
 
-Tangle separates *event ingestion* from *detection* from *resolution*. The
+Tangle separates _event ingestion_ from _detection_ from _resolution_. The
 three stages are deliberately independent — you can swap SDK hooks for OTLP
 spans, switch cycle detection to livelock detection per event type, and chain
 resolvers in any order. The shape of the system:
@@ -74,7 +74,7 @@ reappearing in disguise. Holt described it in 1972 for kernel deadlock
 detection. Database engines use it for transaction lock cycles. Distributed
 lock managers like Chubby and ZooKeeper reason about it implicitly. The
 insight in Tangle is that an LLM agent holding a conversational turn is, for
-the purposes of progress analysis, *isomorphic* to a process holding a
+the purposes of progress analysis, _isomorphic_ to a process holding a
 resource. Same graph, different vertices.
 
 That matters because cycle detection on a WFG is a well-understood problem with
@@ -95,7 +95,7 @@ fingerprints each `SEND` event's message payload with
 this is a signal, not a security claim) and keeps the last N digests in a
 ring buffer. When the same digest reappears more than `livelock_min_repeats`
 times in the window, the detector fires. No semantic understanding of the
-message is required; identical repeated content *is* the signal.
+message is required; identical repeated content _is_ the signal.
 
 That distinction matters operationally. Deadlock detection here is structural:
 if a Wait-For Graph contains a cycle, the workflow is blocked in a precise,
@@ -171,8 +171,8 @@ or multi-agent negotiation patterns, you have almost certainly hit a workflow
 that hung. The standard mitigation — a coarse wall-clock timeout — is a
 blunt instrument: it catches deadlocks eventually, but at the cost of
 cancelling any slow-but-healthy run that exceeds the budget. Tangle's
-contribution is to give the same workflow a *structural* reason to cancel
-(a cycle in the WFG, a repeated digest pattern) rather than a *temporal* one
+contribution is to give the same workflow a _structural_ reason to cancel
+(a cycle in the WFG, a repeated digest pattern) rather than a _temporal_ one
 (we waited too long). That distinction matters at scale, because it
 decouples correctness from tail latency.
 
@@ -180,6 +180,6 @@ The approach generalizes past LangGraph. Any system where autonomous
 components exchange messages and occasionally wait on each other — agent
 frameworks, workflow orchestrators, multi-model ensembles — has the same
 failure modes. Tangle is an early, careful implementation of what I suspect
-will become a valuable tool in building reliable and fault tolerant agentic infrastructure: *progress monitors* that
+will become a valuable tool in building reliable and fault tolerant agentic infrastructure: _progress monitors_ that
 treat liveness as a first-class property, not a property you check by
 inference after everything has already gone quiet.

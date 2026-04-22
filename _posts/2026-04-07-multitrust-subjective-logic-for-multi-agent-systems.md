@@ -28,7 +28,7 @@ Subjective Logic, developed by Audun Jøsang in the early 2000s, is a
 probabilistic logic designed precisely for reasoning under uncertainty where
 the uncertainty itself must be represented. An opinion looks like this:
 
-```
+```python
 opinion = Opinion(
     belief      = 0.60,   # evidence supports trusting the agent
     disbelief   = 0.12,   # evidence against
@@ -48,7 +48,7 @@ with no special-casing.
 
 Under the hood, evidence maps to opinions through the Beta distribution:
 
-```
+```text
 belief      = positive / (positive + negative + W)
 disbelief   = negative / (positive + negative + W)
 uncertainty = W        / (positive + negative + W)
@@ -86,24 +86,23 @@ between environments.
 ![Multitrust Architecture](/assets/img/multitrust_architecture.png)
 
 The flow is deliberately one-directional:
-  - Callers submit observations as
-`Evidence` records (agent, authority, positive count, negative count, an
-optional rule name). 
-  - The `TrustManager` fuses those into Subjective Logic
-opinions using the canonical operators — cumulative fusion for independent
-authorities, averaging for redundant ones. 
-  - Opinions are persisted in the
-trust store. 
-  - When asked for a trust score, the manager applies time decay
-(opinions drift toward vacuous at a configurable half-life), projects the
-current opinion, and returns the scalar.
+
+- Callers submit observations as `Evidence` records (agent, authority,
+  positive count, negative count, an optional rule name).
+- The `TrustManager` fuses those into Subjective Logic opinions using the
+  canonical operators — cumulative fusion for independent authorities,
+  averaging for redundant ones.
+- Opinions are persisted in the trust store.
+- When asked for a trust score, the manager applies time decay (opinions
+  drift toward vacuous at a configurable half-life), projects the current
+  opinion, and returns the scalar.
 
 The `EvidenceLedger` is the piece that pulls its weight in production. It
 stores the *individual* observations that contributed to an opinion, with
 authority IDs and rule names. When something goes wrong and you need to
 defend a trust decision — *why did we route this request to agent X?* —
 `explain_trust()` produces a structured breakdown showing which authorities
-and _which rules_ moved the score, _by how much_, and _when_.
+and *which rules* moved the score, *by how much*, and *when*.
 
 A representative explanation looks less like a mystery score and more like an
 audit trail:
@@ -148,8 +147,8 @@ If you are building a multi-agent system where different agents have
 different reliability profiles — and in practice, every non-trivial
 multi-agent system has this — you eventually need a way to represent and
 reason about that. Rolling a scalar score is the obvious first move, and it
-will be wrong in the three places that matter: _cold start_, _recovery after
-degradation_, and _explainability_. Subjective Logic is a two-decades-old,
+will be wrong in the three places that matter: *cold start*, *recovery after
+degradation*, and *explainability*. Subjective Logic is a two-decades-old,
 well-studied framework that gets all three right. MultiTrust is a small,
 modern, MCP-native implementation of it. The combination of principled math
 and standard-protocol exposure is, I think, the shape this category of tool

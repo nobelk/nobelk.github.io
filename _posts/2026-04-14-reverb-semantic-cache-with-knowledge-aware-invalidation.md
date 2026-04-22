@@ -19,7 +19,7 @@ hallucination vector dressed up as "we cached it."
 service that addresses both failure modes. It combines a _two-tier cache_
 (exact SHA-256 match, then embedding-cosine similarity) with **knowledge-aware
 invalidation**: every cached entry tracks the source documents it was derived
-from, and a change-data-capture pipeline evicts entries by *causality* when
+from, and a change-data-capture pipeline evicts entries by _causality_ when
 their sources change. TTLs become a backstop, not the primary correctness
 mechanism.
 
@@ -36,8 +36,8 @@ handles 20–40% of traffic, depending on how much of the workload is human-in-
 the-loop.
 
 The semantic tier is where it gets interesting. Two users phrasing the same
-question differently — *"how do I reset my password?"* vs. *"password reset
-help"* — should get the same answer. The tier computes an embedding for the
+question differently — _"how do I reset my password?"_ vs. _"password reset
+help"_ — should get the same answer. The tier computes an embedding for the
 incoming prompt, searches a vector index for top-k nearest neighbors above a
 configurable cosine-similarity threshold (0.95 by default), and returns the
 closest hit. Latency climbs to ~50ms, which is still one to two orders of
@@ -58,22 +58,23 @@ HNSW plus NATS-driven CDC without code changes. The top-level flow:
 ![Reverb Architecture](/assets/img/reverb_architecture.png)
 
 Notice that the invalidation path and the lookup path share
-no state beyond the store itself. 
+no state beyond the store itself.
+
 - CDC events can fire at any time — a webhook from your CMS, a NATS JetStream
   message, a polling loop against a content API.
 - The invalidation engine consults the lineage index to figure out which
   specific cache entries to evict. Every other cached entry keeps its hit rate.
-    
+
 Two interesting design choices are:
+
 - the two-tier fallthrough, which means the cache has a meaningful answer for
-  *most* queries, not just byte-identical ones
+  _most_ queries, not just byte-identical ones
 - the lineage-based invalidation, which means stale-knowledge hallucinations
   stop being an accepted cost of caching
 
 Neither is a novel technique in isolation — CDN cache tags and hierarchical CPU caches use similar approaches. The novelty is in recognizing that LLM responses are derived data with explicit sources, and that derived-data systems have
 known-correct invalidation disciplines that work just as well when the
 derivation is a _transformer inference_.
-
 
 ## Lineage as the first-class concept
 
@@ -92,7 +93,7 @@ If you omit a source, Reverb cannot invalidate on that source's change; if you
 over-attach unrelated sources, you will evict too aggressively. The cache is
 only as causally correct as the lineage you record at write time.
 
-- If the source has been *deleted* (zero hash), invalidate every dependent
+- If the source has been _deleted_ (zero hash), invalidate every dependent
   entry.
 - If the source still exists but the `content_hash` differs from the stored
   value, invalidate.
@@ -171,6 +172,6 @@ LLM systems in the same way that ordinary HTTP caching became table stakes
 for the web in the 2000s. The _cost pressure_ is enormous — every cache hit
 is an LLM call that did not happen — and the latency improvement is user-
 perceptible. But "cache LLM responses" is the easy version of the problem.
-The hard version is *"cache LLM responses correctly, even when the world
-the LLM is reasoning about changes out from under the cache."* That is the
+The hard version is _"cache LLM responses correctly, even when the world
+the LLM is reasoning about changes out from under the cache."_ That is the
 problem Reverb is built to solve.
