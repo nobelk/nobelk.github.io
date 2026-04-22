@@ -1,0 +1,14 @@
+---
+layout: default
+---
+<div class="post-list">
+  {% for post in paginator.posts %}
+    <article class="post-summary">
+      <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+      {% include post-meta.html post=post %}
+      <div class="post-excerpt">{{ post.excerpt }}</div>
+      <a class="read-more" href="{{ post.url | relative_url }}">Continue reading &rarr;</a>
+    </article>
+  {% endfor %}
+</div>
+{% include pagination.html %}

@@ -1,0 +1,9 @@
+{%- assign post = include.post -%}
+{%- assign words = post.content | number_of_words -%}
+<p class="post-meta">
+  <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %-d, %Y" }}</time>
+  <span class="post-meta__sep">&middot;</span>
+  {{ words }} words
+  <span class="post-meta__sep">&middot;</span>
+  {% include reading-time.html content=post.content %} read
+</p>

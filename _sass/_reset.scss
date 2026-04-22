@@ -1,0 +1,33 @@
+@use "variables" as *;
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: $color-bg;
+  color: $color-text;
+  font-family: $font-serif;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img, svg { max-width: 100%; height: auto; }
+
+a {
+  color: $color-accent;
+  text-decoration: underline;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.18em;
+}
+a:hover { color: $color-accent-hover; }
+
+button { font: inherit; cursor: pointer; }
+
+main { display: block; }
+
+:focus-visible { outline: 2px solid $color-accent; outline-offset: 2px; }

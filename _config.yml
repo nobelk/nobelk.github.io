@@ -1,0 +1,83 @@
+# Site identity
+title: Zero Downtime
+tagline: Notes on building systems that don't fall over
+description: >-
+  Technical writing on distributed systems, reliability, and operational
+  excellence by Dr. Nobel Khandaker.
+
+# NOTE: Until Phase 11 stands up the custom domain, the site deploys to the
+# user-pages URL. Switch this to https://zerodowntime.dev when DNS + cert are live.
+url: https://nobelk.github.io
+baseurl: ""
+lang: en
+
+author:
+  name: Dr. Nobel Khandaker
+  email: nobel@intramotev.com
+  github: nobelk
+  # Add additional handles as they're created — social-icons.html renders any present:
+  # twitter: nobelk
+  # mastodon: https://hachyderm.io/@nobelk
+  # linkedin: nobelk
+
+# Build behavior
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  hard_wrap: false
+
+permalink: /:year/:month/:day/:title.html
+excerpt_separator: <!--more-->
+
+paginate: 16
+paginate_path: /p/:num
+
+timezone: America/New_York
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-paginate
+  - jekyll-redirect-from
+  - jekyll-archives
+  - jekyll-last-modified-at
+
+jekyll-archives:
+  enabled:
+    - tags
+    - categories
+  layouts:
+    tag: tag
+    category: category
+  permalinks:
+    tag: /tag/:name/
+    category: /category/:name/
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      comments: true
+  - scope:
+      path: "pages"
+    values:
+      layout: page
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - Rakefile
+  - README.md
+  - LICENSE
+  - CLAUDE.md
+  - blog_deployment_plan.md
+  - mise.toml
+  - vendor
+  - node_modules
+  - .bundle
+  - .ruby-version

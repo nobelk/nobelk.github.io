@@ -1,0 +1,14 @@
+---
+layout: default
+---
+<header class="archive-header">
+  <h1>Posts in &ldquo;{{ page.title }}&rdquo;</h1>
+</header>
+<div class="post-list">
+  {% for post in page.posts %}
+    <article class="post-summary">
+      <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+      {% include post-meta.html post=post %}
+    </article>
+  {% endfor %}
+</div>

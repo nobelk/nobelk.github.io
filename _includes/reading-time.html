@@ -1,0 +1,9 @@
+{%- comment -%}
+Reading-time helper. Uses 200 wpm, rounds UP, and clamps to 1 minute so a
+short note doesn't display as "0 min".
+Usage: {% include reading-time.html content=post.content %}
+{%- endcomment -%}
+{%- assign rt_words = include.content | number_of_words -%}
+{%- assign rt_minutes = rt_words | divided_by: 200.0 | ceil -%}
+{%- if rt_minutes < 1 -%}{%- assign rt_minutes = 1 -%}{%- endif -%}
+{{ rt_minutes }} min
