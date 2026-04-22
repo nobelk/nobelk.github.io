@@ -7,3 +7,5 @@ _site/
 vendor/
 # Node — pagefind ships as an npm package
 node_modules/
+
+.DS_Store
