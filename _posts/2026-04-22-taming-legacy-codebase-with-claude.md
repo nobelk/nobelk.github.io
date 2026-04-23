@@ -31,29 +31,7 @@ High-risk changes were verified with tests first or alongside the fix, especiall
 
 Three services sat at the heart of the system. A device-side proxy ran on embedded Linux hardware and bridged a local message bus to a central coordinator over SignalR. A server-side coordinator aggregated state from hundreds of connected devices and fanned out commands to operator consoles. A mobile controller gave field operators a touchscreen interface to issue commands.
 
-```text
-                  ┌─────────────────────┐
-                  │   Operator Console  │  (mobile, touchscreen)
-                  │    ~ 180 files      │
-                  └──────────┬──────────┘
-                             │ SignalR
-                             ▼
-                  ┌─────────────────────┐
-                  │     Coordinator     │  (server, .NET)
-                  │    ~ 60 files       │
-                  └──────────┬──────────┘
-                             │ SignalR
-                             ▼
-                  ┌─────────────────────┐
-                  │     EdgeProxy       │  (device, .NET on ARM Linux)
-                  │    ~ 15 files       │
-                  └──────────┬──────────┘
-                             │ Redis pub/sub + Protobuf
-                             ▼
-                  ┌─────────────────────┐
-                  │  Local Message Bus  │
-                  └─────────────────────┘
-```
+![Monolithic DataBridgeService split into transport, command dispatch, state, and peripheral control components](/assets/img/refactored_components.png)
 
 Across the audit documents we generated for these services, Claude surfaced well over **140 issue instances** across five categories:
 
@@ -69,7 +47,7 @@ Those counts came from multiple audits run on different services and at differen
 
 What the numbers did tell us, reliably, was where the risk clustered: concurrency, observability, and unsafe async usage. No single human could hold that entire list in working memory while also writing code. That is exactly the kind of problem where Claude earns its keep.
 
-## What Claude Did, and What Humans Still Owned
+## What Claude Did, and What Human Developers Still Owned
 
 Claude was most useful in four places:
 
@@ -101,63 +79,7 @@ Throughout the effort, we produced markdown audit documents. Each one listed eve
 
 ## Part 1 — Refactoring
 
-The first service we tackled had a class called `DataBridgeService` that had grown into a monolith. It managed the outbound message queue, the inbound command handlers, the reconnection logic, the state machine, and — somehow — the audio playback lifecycle. It had accumulated too many responsibilities, too much timing logic, and too many opportunities for shared-state mistakes.
-
 We asked Claude for a refactoring proposal. The useful part was not "AI architecture." It was the dependency map: which methods touched transport, which ones mutated shared state, and which timers or callbacks crossed those boundaries. From there, the split along transport, command dispatch, state, and peripheral control became fairly obvious.
-
-![Monolithic DataBridgeService split into transport, command dispatch, state, and peripheral control components](/assets/img/refactored_components.png)
-
-### Example — isolating a hot-path send loop
-
-Before refactoring, the outbound send method looked like this (obfuscated):
-
-```csharp
-public async Task SendOutboundLoop()
-{
-    Stopwatch watch = Stopwatch.StartNew();
-    for (;;)
-    {
-        if (IsConnected)
-        {
-            watch.Restart();
-            var snapshot = _sensorState.CurrentSnapshot;
-            await _connection.TrySendAsync(
-                nameof(IHub.ReceiveSensors), snapshot, _logger);
-        }
-        int delayRealTime = Constants.SendIntervalMs - (int)watch.ElapsedMilliseconds;
-        if (delayRealTime > 0) await Task.Delay(delayRealTime);
-    }
-}
-```
-
-Three problems sit quietly in those eleven lines. The loop has no cancellation token, so the service cannot shut down cleanly. The stopwatch is only restarted inside the connected branch, so a long disconnect produces a deeply negative delay. And `CurrentSnapshot` returns a mutable reference into shared state that another thread is actively writing to.
-
-After refactoring, the same responsibility moved behind a dedicated `OutboundSender` and a new snapshot method on the state service:
-
-```csharp
-public async Task SendLoopAsync(CancellationToken cancellationToken)
-{
-    var watch = Stopwatch.StartNew();
-    while (!cancellationToken.IsCancellationRequested)
-    {
-        watch.Restart();
-        if (_transport.IsConnected)
-        {
-            SensorSnapshot snapshot = _sensorState.TakeImmutableSnapshot();
-            await _transport.TrySendAsync(
-                HubMethods.ReceiveSensors, snapshot, _logger, cancellationToken);
-        }
-        int delayMs = Constants.SendIntervalMs - (int)watch.ElapsedMilliseconds;
-        if (delayMs > 0) await Task.Delay(delayMs, cancellationToken);
-    }
-}
-```
-
-`TakeImmutableSnapshot` returns a freshly allocated value object built inside a lock, so serialization is decoupled from mutation. The loop exits cleanly on shutdown. The stopwatch restarts unconditionally. What used to be a pile of timing edge cases is now boring and predictable — which is the highest praise a concurrent loop can earn.
-
-This kind of refactor mattered because it made the later bug fixes easier. Once the send loop owned only one job, it became straightforward to add cancellation, reason about timing, and write targeted tests around shared state.
-
-### The refactoring principles we settled on
 
 Rather than inventing style guides from scratch, we had Claude summarize the *implicit* conventions it observed in the existing clean code, and then used those as the refactoring targets for the rest. Three principles emerged:
 
@@ -165,7 +87,7 @@ Rather than inventing style guides from scratch, we had Claude summarize the *im
 - **Pass cancellation through every async boundary.** No exceptions.
 - **Return snapshots, not references.** Any public getter on shared mutable state returned a copy.
 
-These rules sound obvious, but before Claude cataloged every violation across sixty files, we had no idea how widespread the pattern breaks actually were.
+These rules sound obvious, but before Claude cataloged every violation across **sixty** files, we had no idea how widespread the pattern breaks actually were.
 
 ---
 
@@ -467,45 +389,7 @@ We did not fix all 44. We explicitly chose to leave one. It was a static integer
 
 ---
 
-## Part 4 — Improving Code Quality
-
-Code quality is not glamorous. It is mostly deleting things.
-
-Claude produced a code-quality audit that surfaced entire source files that had been commented out for over a year. Multiple files totalling hundreds of lines of `// ...` lived in the main project. Deleting them improved comprehension more than any single naming cleanup we did.
-
-Other recurring issues:
-
-- **Dead references.** A constructor was commented out, which meant every caller of the owning method got a `NullReferenceException`. Since no real caller hit the code path, the bug had never manifested — but the field was typed `null!` to suppress the compiler warning, so the check was completely defeated.
-- **String interpolation in log calls.** `_logger.LogError($"Failed to parse {input}")` loses structured logging entirely. Every such site was converted to the templated form.
-- **Static loggers assigned from instance constructors.** A single static field held `ILogger<T>` across all instances of the class. In tests, the last-constructed instance silently clobbered the static reference. Instance loggers fixed this in one pass.
-- **`NotImplementedException` in registered handlers.** Two SignalR handlers that the server could invoke at any time threw `NotImplementedException`. We replaced them with a warning log and `Task.CompletedTask`.
-
-### An example that recurred everywhere
-
-```csharp
-// Before — expensive, fragile, repeated 13 times
-var site = _configuration.GetRequiredSection("AppSettings").Get<AppSettings>()?.Site;
-var vehicleId = _configuration.GetRequiredSection("AppSettings").Get<AppSettings>()?.VehicleId;
-// ...eleven more lines exactly like the two above...
-```
-
-The `Get<AppSettings>()` call deserializes the entire section every time it runs. In a service called repeatedly, this was wasteful and needlessly fragile. And of course each call site had its own null-check style.
-
-```csharp
-// After — deserialize once, use the result
-var appSettings = _configuration.GetRequiredSection("AppSettings").Get<AppSettings>()
-    ?? throw new InvalidOperationException("AppSettings section is missing");
-
-var site = appSettings.Site;
-var vehicleId = appSettings.VehicleId;
-// ...
-```
-
-Better still was the follow-up migration to `IOptions<AppSettings>` via dependency injection, which eliminated the whole pattern.
-
----
-
-## Part 5 — Reducing Technical Debt
+## Part 4 — Reducing Technical Debt
 
 "Technical debt" is a vague term, so we tried to reduce it to observable indicators. We tracked five, all derived from audit output:
 
@@ -522,14 +406,6 @@ Better still was the follow-up migration to `IOptions<AppSettings>` via dependen
 The secret audit was the single highest-leverage activity we did. Claude found a hardcoded GitHub personal access token in `nuget.config` — a file not covered by `.gitignore`. We rotated the token, moved it to a CI secret, and added the file to `.gitignore` within the same hour. An AES key was hardcoded in a crypto helper; we moved it to environment-variable-backed configuration and generated a random IV per encryption instead of the all-zeros IV that had shipped.
 
 The remaining eleven `TODO` comments were all triaged. Each one either got a ticket, got a documentation comment explaining why we were leaving it, or was deleted because the thing it was pointing at no longer existed.
-
-### How we kept debt from returning
-
-Three safeguards helped keep the debt from returning:
-
-1. **Analyzers.** We either added or prioritized analyzers such as `Microsoft.CodeAnalysis.NetAnalyzers`, then treated their output as part of the debt backlog rather than optional cleanup.
-2. **A recurring audit command.** We saved the audit prompt as a repeatable command and ran it regularly. New issues were rare but not zero; when they appeared, they were caught while still a one-line diff.
-3. **Logging checks.** For the most operationally important paths, we treated logging as behavior worth reviewing and, in some cases, testing.
 
 ---
 
