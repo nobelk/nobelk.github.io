@@ -8,7 +8,7 @@ Dr. Nobel Khandaker's personal blog. The repo follows the GitHub Pages user-site
 
 ## Current state
 
-Phases 1–10 and 12 of `blog_deployment_plan.md` are in place. Phase 11 (custom domain) was done out-of-order in the earlier sessions. Phase 13 is a pre-launch verification checklist — the current run of `rake build && rake test` passes cleanly. Phase 14 (post-launch polish) is still open by design.
+Phases 1–13 of `blog_deployment_plan.md` are in place and the site is live at `https://zerodowntime.dev` with published posts in `_posts/`. Phase 11 (custom domain) was completed out-of-order in an earlier session. Phase 14 (post-launch polish) is still open by design.
 
 Three features ship *code-complete but activation-gated*: giscus comments, Plausible analytics, and KaTeX/Mermaid on-page toggles. They render nothing until the operator fills in the `_config.yml` block or adds the per-post front-matter flag. Details in the per-phase notes below.
 
@@ -18,8 +18,8 @@ Three features ship *code-complete but activation-gated*: giscus comments, Plaus
 - `Rakefile` → `rake build`, `rake serve`, `rake test`. `rake test` validates the existing `_site/` with `html-proofer` and does **not** rebuild, so a CI pipeline can do `build → pagefind → test` without clobbering the production artifact.
 
 **Phase 2 — config + skeleton (done)**
-- `_config.yml` populated per the plan, with one deviation: `url: https://nobelk.github.io` is used (with a comment) until Phase 11 cuts the custom domain over to `https://zerodowntime.dev`. Setting the planned domain now would emit absolute URLs in feed/sitemap/canonical pointing to a host that doesn't resolve.
-- Empty `_drafts/` and `assets/img/` carry `.gitkeep` placeholders so git tracks them.
+- `_config.yml` populated per the plan. `url: https://zerodowntime.dev` matches the `CNAME` file (Phase 11 is live — see that phase's notes before touching either).
+- `_drafts/` and `assets/img/` each carry a `.gitkeep` so git tracked them from day one; `assets/img/` now also holds real post hero/architecture images.
 - `404.html` uses `layout: null` and `sitemap: false`.
 
 **Phase 3 — layouts + design system (done)**
@@ -78,7 +78,7 @@ Three features ship *code-complete but activation-gated*: giscus comments, Plaus
 - `webmaster_verifications:` in `_config.yml` is still commented out — activate after registering with Google Search Console and Bing Webmaster Tools.
 
 **Phase 12 — CI/CD (done)**
-- `.github/workflows/deploy.yml` runs on push to `main` and on PRs to `main`: checks out with `fetch-depth: 0` (so `jekyll-last-modified-at` can read full git history), sets up Ruby 3.3.5 + Node 20, runs `npm ci`, then `JEKYLL_ENV=production bundle exec rake build`, then `bundle exec rake test`, then uploads the `_site` artifact. `deploy` only runs on push events to `main`.
+- `.github/workflows/deploy.yml` runs on push to `main` and on PRs to `main`: checks out with `fetch-depth: 0` (so `jekyll-last-modified-at` can read full git history), sets up Ruby 3.3.5 + Node 20, runs `npm ci`, then `npm run lint` (stylelint + markdownlint, so style regressions fail before the build cost), then `JEKYLL_ENV=production bundle exec rake build`, then `bundle exec rake test`, then uploads the `_site` artifact. `deploy` only runs on push events to `main`.
 - `.github/workflows/external-links.yml` runs weekly (Mondays 12:00 UTC) and on manual dispatch. It's `continue-on-error: true` so upstream outages don't page anyone. This is the Phase-10 "external link validation" deferred off the hot path.
 - **Don't run `rake test` before upload** — the Rakefile's `test` task validates the existing `_site`, never rebuilds it, which the plan's original workflow got wrong (Review Comment #1 in `blog_deployment_plan.md`). Running `build → test → upload` keeps a single authoritative artifact.
 
