@@ -1,6 +1,8 @@
 ---
-title: "Spec-Driven Development with Claude Code"
+title: "Agentic Engineering: Spec-Driven Development"
 date: 2026-04-23 09:00:00 -0400
+series: "Agentic Engineering"
+series_order: 2
 description: "Spec-driven development with Claude Code — project constitutions, feature loops, validation, replanning, and agent-agnostic workflows."
 image: /assets/img/sdd_workflow.png
 tags: [spec-driven-development, coding-agents, ai, claude-code, workflow]

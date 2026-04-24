@@ -1,6 +1,8 @@
 ---
-title: "Taming a Legacy Codebase with Claude: A Field Report on Refactoring, Race Conditions, and Technical Debt"
+title: "Agentic Engineering: Taming a Legacy Codebase"
 date: 2026-04-22 08:00:00 -0400
+series: "Agentic Engineering"
+series_order: 1
 description: "How a small engineering team used Claude to pay down years of technical debt across three safety-critical .NET services — without breaking production."
 image: /assets/img/refactoring_cycle.png
 tags: [refactoring, technical-debt, dotnet, concurrency, reliability]
