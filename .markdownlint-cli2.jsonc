@@ -23,6 +23,7 @@
     // Internal docs — not shipped with the site, so the markdown rules for
     // rendered prose (heading spacing, fence languages) don't apply.
     "CLAUDE.md",
-    "blog_deployment_plan.md"
+    "blog_deployment_plan.md",
+    "agentic_project_planning_detail.md"
   ]
 }
