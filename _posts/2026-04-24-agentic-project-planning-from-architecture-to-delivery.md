@@ -119,7 +119,7 @@ The domain core can be built and tested separately from adapters. The ZeroMQ and
 
 The delivery plan used those boundaries directly:
 
-![Sytem boundary](/assets/img/agent_planning_system_boundary.png)
+![Sytem boundary](/assets/img/agentic_planning_system_boundary.png)
 
 This gave the plan a natural decomposition:
 
@@ -160,7 +160,7 @@ The plan therefore split messaging work into separate epics:
 
 This is a good example of agentic planning preserving design intent. A weaker plan might have created a single "Implement messaging" epic. That would hide the highest-risk part of the architecture inside a broad bucket. The agent-generated plan instead kept the hot and cold paths visible.
 
-![Hot and Warm](/assets/img/agentic_planning_message_processing_paths)
+![Hot and Warm](/assets/img/agentic_planning_message_processing_paths.png)
 
 The diagram above is more than technical documentation. It is a delivery planning device. It tells the team which work can proceed independently and where integration risk will appear.
 
