@@ -1,0 +1,33 @@
+{%- if page.series -%}
+  {%- assign series_posts = site.posts | where: "series", page.series | sort: "series_order" -%}
+  {%- if series_posts.size > 1 -%}
+  <nav class="series-nav" aria-label="Series navigation">
+    <p class="series-nav__label">Part {{ page.series_order }} of {{ series_posts.size }} in the <strong>{{ page.series }}</strong> series</p>
+    <ol class="series-nav__list">
+      {%- for post in series_posts -%}
+        <li{% if post.url == page.url %} aria-current="page"{% endif %}>
+          {%- if post.url == page.url -%}
+            {{ post.title }}
+          {%- else -%}
+            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ol>
+    {%- assign prev_order = page.series_order | minus: 1 -%}
+    {%- assign next_order = page.series_order | plus: 1 -%}
+    {%- assign prev_post = series_posts | where: "series_order", prev_order | first -%}
+    {%- assign next_post = series_posts | where: "series_order", next_order | first -%}
+    {%- if prev_post or next_post -%}
+    <div class="series-nav__links">
+      {%- if prev_post -%}
+        <a href="{{ prev_post.url | relative_url }}" rel="prev">&larr; {{ prev_post.title }}</a>
+      {%- endif -%}
+      {%- if next_post -%}
+        <a href="{{ next_post.url | relative_url }}" rel="next">{{ next_post.title }} &rarr;</a>
+      {%- endif -%}
+    </div>
+    {%- endif -%}
+  </nav>
+  {%- endif -%}
+{%- endif -%}

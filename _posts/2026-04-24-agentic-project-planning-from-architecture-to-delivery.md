@@ -4,6 +4,7 @@ date: 2026-04-24 09:00:00 -0400
 series: "Agentic Engineering"
 series_order: 3
 description: "How agentic planning turns a 30-page architecture design into milestones, epics, stories, risk matrices, and release gates — without losing architectural intent."
+image: /assets/img/agentic_planning_workflow.png
 tags: [agentic-planning, project-management, architecture, delivery, jira]
 categories: [practices]
 ---
@@ -83,7 +84,7 @@ A delivery plan needs different questions answered:
 
 Agentic planning is useful because agents are good at repeatedly transforming structured information across levels of abstraction. In this case, the process turned a 30-page architecture design into a six-milestone delivery plan plus a scoped placeholder for audio/video streaming.
 
-![Agentic planning workflow](/assets/img/agentic_planning_workflow.png)
+![Agentic planning workflow: architecture document passes through extraction, risk analysis, and milestone structuring with human review gates](/assets/img/agentic_planning_workflow.png)
 
 The important point here is the review loop. Agents accelerate the conversion, but the human team members remain responsible for whether the plan is coherent, safe, and aligned with real team constraints.
 
@@ -119,7 +120,7 @@ The domain core can be built and tested separately from adapters. The ZeroMQ and
 
 The delivery plan used those boundaries directly:
 
-![Sytem boundary](/assets/img/agentic_planning_system_boundary.png)
+![System boundary diagram showing hexagonal architecture with transport adapters, domain core, and persistence ports](/assets/img/agentic_planning_system_boundary.png){: loading="lazy"}
 
 This gave the plan a natural decomposition:
 
@@ -160,7 +161,7 @@ The plan therefore split messaging work into separate epics:
 
 This is a good example of agentic planning preserving design intent. A weaker plan might have created a single "Implement messaging" epic. That would hide the highest-risk part of the architecture inside a broad bucket. The agent-generated plan instead kept the hot and cold paths visible.
 
-![Hot and Warm](/assets/img/agentic_planning_message_processing_paths.png)
+![Message processing paths: hot path for safety-critical signals under 100ms, warm path for control commands, cold path for admin operations](/assets/img/agentic_planning_message_processing_paths.png){: loading="lazy"}
 
 The diagram above is more than technical documentation. It is a delivery planning device. It tells the team which work can proceed independently and where integration risk will appear.
 
@@ -425,7 +426,7 @@ Agentic planning reduces planning labor. It does not remove technical accountabi
 
 The agent-created plan accurately captures that the service is not simply a rewrite from C#/SignalR to Go/ZeroMQ. It is a safety-sensitive architecture migration with strict latency, restart, identity, idempotency, observability, and rollout requirements. It also makes clear where the team can parallelize and where it must serialize work. That is what good agentic project planning should produce. Not a bigger backlog. A clearer one. The following figure shows the steps that led to the final executable plan.
 
-![Agentic planning pattern](/assets/img/agentic_planning_repeatable_pattern.png)
+![Agentic planning pattern](/assets/img/agentic_planning_repeatable_pattern.png){: loading="lazy"}
 
 Agents are most valuable when they help teams preserve architectural intent all the way down to executable work. In this case, the architecture document defined the system. The planning agents turned that definition into delivery structure: milestones, risk controls, quality gates, and release evidence.
 

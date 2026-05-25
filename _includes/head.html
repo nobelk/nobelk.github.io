@@ -18,6 +18,15 @@
   {%- endcomment -%}
   {% seo %}
   {% feed_meta %}
+  {%- if page.series -%}
+    {%- assign series_posts = site.posts | where: "series", page.series | sort: "series_order" -%}
+    {%- assign prev_order = page.series_order | minus: 1 -%}
+    {%- assign next_order = page.series_order | plus: 1 -%}
+    {%- assign prev_post = series_posts | where: "series_order", prev_order | first -%}
+    {%- assign next_post = series_posts | where: "series_order", next_order | first -%}
+    {%- if prev_post -%}<link rel="prev" href="{{ prev_post.url | absolute_url }}">{%- endif -%}
+    {%- if next_post -%}<link rel="next" href="{{ next_post.url | absolute_url }}">{%- endif -%}
+  {%- endif -%}
 
   {%- if page.math -%}{% include math.html %}{%- endif -%}
   {%- if page.mermaid -%}{% include mermaid.html %}{%- endif -%}

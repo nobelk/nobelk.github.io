@@ -2,6 +2,7 @@
 title: "MultiTrust: Subjective Logic as a Runtime for Multi-Agent Trust"
 date: 2026-04-22 06:00:00 -0400
 description: "Scalar trust scores pretend certainty they do not have. MultiTrust models trust as a Subjective Logic opinion — belief, disbelief, uncertainty — and exposes it as an MCP tool any agent can call."
+image: /assets/img/multitrust_architecture.png
 tags: [agents, trust, mcp, subjective-logic, reliability]
 categories: [systems]
 ---
@@ -83,7 +84,7 @@ MCP server is one of several entry points — you can also use the library
 directly, gate async functions with decorators, or export/import snapshots
 between environments.
 
-![Multitrust Architecture](/assets/img/multitrust_architecture.png)
+![MultiTrust architecture: MCP server and decorators feed evidence through TrustManager into pluggable storage backends](/assets/img/multitrust_architecture.png)
 
 The flow is deliberately one-directional:
 
@@ -153,3 +154,7 @@ well-studied framework that gets all three right. MultiTrust is a small,
 modern, MCP-native implementation of it. The combination of principled math
 and standard-protocol exposure is, I think, the shape this category of tool
 should take.
+
+---
+
+MultiTrust addresses the *trust* dimension of multi-agent reliability. Two companion pieces cover adjacent failure modes: [Tangle](/2026/04/22/tangle-deadlock-detection-for-langgraph.html) detects deadlocks and livelocks when agents form circular waits, and [Reverb](/2026/04/22/reverb-semantic-cache-with-knowledge-aware-invalidation.html) ensures cached LLM responses don't go stale when the underlying knowledge changes.

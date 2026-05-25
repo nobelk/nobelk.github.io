@@ -71,7 +71,7 @@ Humans still owned the parts that actually determine whether a system stays safe
 
 Every change followed the same four-phase cycle. The loop became muscle memory within the first two weeks.
 
-![Four-phase working loop: audit, plan, implement with TDD, verify, feeding back to audit](/assets/img/refactoring_cycle.png)
+![Four-phase working loop: audit, plan, implement with TDD, verify, feeding back to audit](/assets/img/refactoring_cycle.png){: loading="lazy"}
 
 The key insight was that Claude is excellent at the first two phases — the ones humans find tedious — and genuinely helpful at the third phase when guided by an explicit failing test. The fourth phase still belongs to humans, but it becomes fast when the diff is small and the test captures the intent.
 
@@ -385,7 +385,7 @@ The `_onError` callback was injected at construction time, which kept the domain
 
 ### The burndown
 
-![Race-condition burndown across 16 weeks, from 44 issues down to 1 acceptable residual](/assets/img/issue_fix_burndown.png)
+![Race-condition burndown across 16 weeks, from 44 issues down to 1 acceptable residual](/assets/img/issue_fix_burndown.png){: loading="lazy"}
 
 We did not fix all 44. We explicitly chose to leave one. It was a static integer increment in a path that was already serialized by the SignalR hub pipeline — meaning a race was theoretically possible but not reachable given how the method was called. We documented the reasoning and moved on. Not every bug is worth fixing, but every bug is worth understanding.
 

@@ -23,22 +23,19 @@ owner:
   name: Dr. Nobel Khandaker
   email: nobel@intramotev.com
   github: nobelk
+  linkedin: nobelkhandaker
   # Add additional handles as they're created — social-icons.html renders any present:
   # twitter: nobelk
   # mastodon: https://hachyderm.io/@nobelk
-  # linkedin: nobelk
 
-# `social:` is INTENTIONALLY OMITTED. On `homepage_or_about` pages,
-# jekyll-seo-tag uses `site.social.name` to override the JSON-LD `name`,
-# which conflates Person schema with WebSite schema — the homepage would
-# emit `name: "Dr. Nobel Khandaker"` instead of `name: "Zero Downtime"`.
-# Re-enable once there are multiple social profiles worth `sameAs`-linking,
-# AND set `social.name` equal to `site.title` to preserve the site's name:
-#   social:
-#     name: Zero Downtime
-#     links:
-#       - https://github.com/nobelk
-#       - https://...
+# `social.name` is set to `site.title` (not the author name) so that
+# jekyll-seo-tag's homepage JSON-LD emits `name: "Zero Downtime"` rather
+# than conflating the WebSite schema with the Person schema.
+social:
+  name: Zero Downtime
+  links:
+    - https://github.com/nobelk
+    - https://linkedin.com/in/nobelkhandaker
 
 # Twitter card config is INTENTIONALLY OMITTED until a real handle exists.
 # Defining `site.twitter` (even a hash with no username) makes jekyll-seo-tag
@@ -131,8 +128,13 @@ defaults:
       path: "pages"
     values:
       layout: page
+  - scope:
+      path: ""
+    values:
+      image: /assets/img/og-default.png
 
 exclude:
+  - _build
   - Gemfile
   - Gemfile.lock
   - Rakefile

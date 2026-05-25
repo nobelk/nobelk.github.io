@@ -2,6 +2,7 @@
 title: "Tangle: Deadlock and Livelock Detection for LangGraph Agents"
 date: 2026-04-22 05:00:00 -0400
 description: "Multi-agent LangGraph workflows can hang silently when agents form circular waits. Tangle borrows a 50-year-old operating-systems idea — the Wait-For Graph — to catch it in milliseconds."
+image: /assets/img/tangle_architecture.png
 tags: [agents, langgraph, reliability, distributed-systems]
 categories: [systems]
 ---
@@ -57,7 +58,7 @@ three stages are deliberately independent — you can swap SDK hooks for OTLP
 spans, switch cycle detection to livelock detection per event type, and chain
 resolvers in any order. The shape of the system:
 
-![Tangle Architecture](/assets/img/tangle_architecture.png)
+![Tangle architecture: event ingestion from LangGraph hooks and OpenTelemetry feeding cycle and livelock detectors](/assets/img/tangle_architecture.png)
 
 Events flow in from one of three sources. Each event is a small, typed record
 (e.g., `REGISTER`, `WAIT_FOR`, `RELEASE`, `SEND`, `CANCEL`, `COMPLETE`). They hit
@@ -183,3 +184,7 @@ failure modes. Tangle is an early, careful implementation of what I suspect
 will become a valuable tool in building reliable and fault tolerant agentic infrastructure: _progress monitors_ that
 treat liveness as a first-class property, not a property you check by
 inference after everything has already gone quiet.
+
+---
+
+Tangle covers the *liveness* dimension of multi-agent reliability — detecting when workflows stop making progress. For the *trust* layer — modeling which agents are reliable based on accumulated evidence — see [MultiTrust](/2026/04/22/multitrust-subjective-logic-for-multi-agent-systems.html). For ensuring cached responses stay fresh when source knowledge changes, see [Reverb](/2026/04/22/reverb-semantic-cache-with-knowledge-aware-invalidation.html).

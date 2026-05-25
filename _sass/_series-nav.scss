@@ -1,0 +1,60 @@
+@use "variables" as *;
+@use "sass:color";
+
+.series-nav {
+  margin: 2rem 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid $color-border;
+  border-left: 4px solid $color-accent;
+  border-radius: 2px;
+  background: color.adjust($color-code-bg, $lightness: 1%);
+}
+
+.series-nav__label {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: $color-text-muted;
+}
+
+.series-nav__list {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+
+  li[aria-current="page"] {
+    font-weight: 700;
+    color: $color-text;
+  }
+
+  a {
+    color: $color-accent;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.series-nav__links {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid $color-border;
+  font-size: 0.9rem;
+
+  a {
+    color: $color-accent;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &[rel="next"] {
+      margin-left: auto;
+    }
+  }
+}

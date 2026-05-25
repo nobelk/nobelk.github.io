@@ -35,7 +35,7 @@ The SDD workflow has two major layers: a one-time **project initialization** ste
 
 The Constitution is the **agent-agnostic and structured foundation of the entire project**. It is a global, high-level set of documents that captures the agreement between the developers in our team and the agent stored in a `specs/` directory:
 
-![Constitution components: mission.md, tech-stack.md, and roadmap.md in a specs/ directory](/assets/img/sdd_constitution.png)
+![Constitution components: mission.md, tech-stack.md, and roadmap.md in a specs/ directory](/assets/img/sdd_constitution.png){: loading="lazy"}
 
 ### Step-by-Step: Drafting the Constitution
 

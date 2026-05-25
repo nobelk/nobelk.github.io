@@ -2,6 +2,7 @@
 title: "Reverb: A Semantic Cache That Knows When Its Answers Go Stale"
 date: 2026-04-22 07:00:00 -0400
 description: "LLM response caches usually invalidate by TTL and hope for the best. Reverb invalidates by causality — when a source document changes, only the cached answers derived from it get evicted."
+image: /assets/img/reverb_architecture.png
 tags: [llm, caching, go, distributed-systems, reliability]
 categories: [systems]
 ---
@@ -55,7 +56,7 @@ Reverb is built around clean interfaces for each pluggable component, which
 is what lets it scale down to an in-memory dev setup and up to Redis plus
 HNSW plus NATS-driven CDC without code changes. The top-level flow:
 
-![Reverb Architecture](/assets/img/reverb_architecture.png)
+![Reverb architecture: two-tier cache with SHA-256 exact match and embedding similarity, connected to CDC-driven invalidation](/assets/img/reverb_architecture.png)
 
 Notice that the invalidation path and the lookup path share
 no state beyond the store itself.
@@ -175,3 +176,7 @@ perceptible. But "cache LLM responses" is the easy version of the problem.
 The hard version is _"cache LLM responses correctly, even when the world
 the LLM is reasoning about changes out from under the cache."_ That is the
 problem Reverb is built to solve.
+
+---
+
+Reverb handles the *knowledge freshness* dimension of agent reliability. For the *trust* side — knowing which agents to rely on based on observed behavior — see [MultiTrust](/2026/04/22/multitrust-subjective-logic-for-multi-agent-systems.html). For detecting when agents get stuck waiting on each other, see [Tangle](/2026/04/22/tangle-deadlock-detection-for-langgraph.html).
