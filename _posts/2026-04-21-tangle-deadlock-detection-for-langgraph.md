@@ -187,4 +187,4 @@ inference after everything has already gone quiet.
 
 ---
 
-Tangle covers the *liveness* dimension of multi-agent reliability — detecting when workflows stop making progress. For the *trust* layer — modeling which agents are reliable based on accumulated evidence — see [MultiTrust](/2026/04/22/multitrust-subjective-logic-for-multi-agent-systems.html). For ensuring cached responses stay fresh when source knowledge changes, see [Reverb](/2026/04/22/reverb-semantic-cache-with-knowledge-aware-invalidation.html).
+Tangle covers the _liveness_ dimension of multi-agent reliability — detecting when workflows stop making progress. For the _trust_ layer — modeling which agents are reliable based on accumulated evidence — see [MultiTrust](/2026/04/22/multitrust-subjective-logic-for-multi-agent-systems.html). For ensuring cached responses stay fresh when source knowledge changes, see [Reverb](/2026/04/22/reverb-semantic-cache-with-knowledge-aware-invalidation.html).

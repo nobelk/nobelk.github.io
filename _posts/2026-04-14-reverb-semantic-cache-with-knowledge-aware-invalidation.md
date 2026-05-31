@@ -179,4 +179,4 @@ problem Reverb is built to solve.
 
 ---
 
-Reverb handles the *knowledge freshness* dimension of agent reliability. For the *trust* side — knowing which agents to rely on based on observed behavior — see [MultiTrust](/2026/04/22/multitrust-subjective-logic-for-multi-agent-systems.html). For detecting when agents get stuck waiting on each other, see [Tangle](/2026/04/22/tangle-deadlock-detection-for-langgraph.html).
+Reverb handles the _knowledge freshness_ dimension of agent reliability. For the _trust_ side — knowing which agents to rely on based on observed behavior — see [MultiTrust](/2026/04/22/multitrust-subjective-logic-for-multi-agent-systems.html). For detecting when agents get stuck waiting on each other, see [Tangle](/2026/04/22/tangle-deadlock-detection-for-langgraph.html).
