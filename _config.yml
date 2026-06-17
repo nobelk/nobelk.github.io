@@ -1,12 +1,12 @@
 # Site identity
-title: Zero Downtime
+title: outloop.blog
 tagline: Notes on building reliable distributed systems with multiagents
 description: >-
   Technical writing by Dr. Nobel Khandaker on building reliable distributed
   systems with multiagents — architecture, reliability, and operational
   excellence.
 
-url: https://zerodowntime.dev
+url: https://outloop.blog
 baseurl: ""
 lang: en
 
@@ -21,21 +21,26 @@ author: Dr. Nobel Khandaker
 # Don't move this into `author:` — see note above.
 owner:
   name: Dr. Nobel Khandaker
-  email: nobel@intramotev.com
+  email: nobel@intramotev.com            # personal address (structured data only; not rendered)
+  contact_email: hello@outloop.blog      # public blog contact (rendered in footer/about/social-icons)
   github: nobelk
   linkedin: nobelkhandaker
+  bluesky: https://bsky.app/profile/outloop.bsky.social
+  devto: https://dev.to/outloop
   # Add additional handles as they're created — social-icons.html renders any present:
   # twitter: nobelk
   # mastodon: https://hachyderm.io/@nobelk
 
 # `social.name` is set to `site.title` (not the author name) so that
-# jekyll-seo-tag's homepage JSON-LD emits `name: "Zero Downtime"` rather
+# jekyll-seo-tag's homepage JSON-LD emits `name: "outloop.blog"` rather
 # than conflating the WebSite schema with the Person schema.
 social:
-  name: Zero Downtime
+  name: outloop.blog
   links:
     - https://github.com/nobelk
     - https://linkedin.com/in/nobelkhandaker
+    - https://bsky.app/profile/outloop.bsky.social
+    - https://dev.to/outloop
 
 # Twitter card config is INTENTIONALLY OMITTED until a real handle exists.
 # Defining `site.twitter` (even a hash with no username) makes jekyll-seo-tag
@@ -78,7 +83,7 @@ giscus:
 # Set `script_src` only if proxying through your own domain; otherwise leave
 # blank and the include uses the default Plausible CDN.
 plausible:
-  domain: ""                 # e.g. "zerodowntime.dev"
+  domain: ""                 # e.g. "outloop.blog"
   script_src: ""             # optional proxy URL; blank = https://plausible.io/js/script.js
 
 # Build behavior
@@ -142,6 +147,7 @@ exclude:
   - LICENSE
   - CLAUDE.md
   - blog_deployment_plan.md
+  - url_migration_plan.md
   - mise.toml
   - vendor
   - node_modules

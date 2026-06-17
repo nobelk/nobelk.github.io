@@ -8,8 +8,17 @@
   {%- if site.owner.mastodon -%}
     <a href="{{ site.owner.mastodon }}" rel="me" aria-label="Mastodon">Mastodon</a>
   {%- endif -%}
+  {%- if site.owner.bluesky -%}
+    <a href="{{ site.owner.bluesky }}" rel="me" aria-label="Bluesky">Bluesky</a>
+  {%- endif -%}
+  {%- if site.owner.devto -%}
+    <a href="{{ site.owner.devto }}" rel="me" aria-label="DEV Community">DEV</a>
+  {%- endif -%}
   {%- if site.owner.linkedin -%}
     <a href="https://linkedin.com/in/{{ site.owner.linkedin }}" rel="me" aria-label="LinkedIn">LinkedIn</a>
+  {%- endif -%}
+  {%- if site.owner.contact_email -%}
+    <a href="mailto:{{ site.owner.contact_email }}" aria-label="Email">Email</a>
   {%- endif -%}
   <a href="{{ '/feed.xml' | relative_url }}" aria-label="RSS feed">RSS</a>
 </div>

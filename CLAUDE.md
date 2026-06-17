@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository purpose
 
-Dr. Nobel Khandaker's personal blog. The repo follows the GitHub Pages user-site convention (`<username>.github.io`), but the site is served at the **custom domain `https://zerodowntime.dev`** via the `CNAME` file at the repo root. Don't change `CNAME` or `_config.yml`'s `url:` without coordinating with whatever DNS / GitHub-Pages settings are upstream.
+Dr. Nobel Khandaker's personal blog. The repo follows the GitHub Pages user-site convention (`<username>.github.io`), but the site is served at the **custom domain `https://outloop.blog`** via the `CNAME` file at the repo root. Don't change `CNAME` or `_config.yml`'s `url:` without coordinating with whatever DNS / GitHub-Pages settings are upstream. (The site was previously served at `zerodowntime.dev`; it was migrated to `outloop.blog` — the old domain is not redirected.)
 
 ## Current state
 
-Phases 1–13 of `blog_deployment_plan.md` are in place and the site is live at `https://zerodowntime.dev` with published posts in `_posts/`. Phase 11 (custom domain) was completed out-of-order in an earlier session. Phase 14 (post-launch polish) is still open by design.
+Phases 1–13 of `blog_deployment_plan.md` are in place and the site is live at `https://outloop.blog` with published posts in `_posts/`. Phase 11 (custom domain) was completed out-of-order in an earlier session. Phase 14 (post-launch polish) is still open by design.
 
 Three features ship *code-complete but activation-gated*: giscus comments, Plausible analytics, and KaTeX/Mermaid on-page toggles. They render nothing until the operator fills in the `_config.yml` block or adds the per-post front-matter flag. Details in the per-phase notes below.
 
@@ -18,7 +18,7 @@ Three features ship *code-complete but activation-gated*: giscus comments, Plaus
 - `Rakefile` → `rake build`, `rake serve`, `rake test`. `rake test` validates the existing `_site/` with `html-proofer` and does **not** rebuild, so a CI pipeline can do `build → pagefind → test` without clobbering the production artifact.
 
 **Phase 2 — config + skeleton (done)**
-- `_config.yml` populated per the plan. `url: https://zerodowntime.dev` matches the `CNAME` file (Phase 11 is live — see that phase's notes before touching either).
+- `_config.yml` populated per the plan. `url: https://outloop.blog` matches the `CNAME` file (Phase 11 is live — see that phase's notes before touching either).
 - `_drafts/` and `assets/img/` each carry a `.gitkeep` so git tracked them from day one; `assets/img/` now also holds real post hero/architecture images.
 - `404.html` uses `layout: null` and `sitemap: false`.
 
@@ -35,7 +35,7 @@ Three features ship *code-complete but activation-gated*: giscus comments, Plaus
 - `{% seo %}` in `_includes/head.html` emits canonical link, full Open Graph block, Twitter Card meta, and JSON-LD (`BlogPosting` for posts, `WebSite` for the homepage). The plan's idea of writing a custom `_includes/schema-article.html` was not needed — `jekyll-seo-tag` already covers `headline`, `datePublished`, `dateModified`, `author`, `mainEntityOfPage`, and (when `page.image` is set) `image`.
 - **Author config is split between two keys** — see the long comment at the top of `_config.yml`. `site.author` is a string (just the name) so jekyll-seo-tag can't fall through to its broken Twitter handle inference. `site.owner` is a hash with structured data (email, github, …) consumed only by our own templates (`footer.html`, `social-icons.html`).
 - `site.twitter` and `site.social` are **intentionally absent** — both have known footguns when configured without complete data. Comments in `_config.yml` describe what to add and when.
-- `robots.txt` is an explicit Liquid-templated file at the repo root (overrides the one `jekyll-sitemap` would auto-generate); the sitemap URL re-resolves automatically when `site.url` flips to `https://zerodowntime.dev` in Phase 11.
+- `robots.txt` is an explicit Liquid-templated file at the repo root (overrides the one `jekyll-sitemap` would auto-generate); the sitemap URL re-resolves automatically from `site.url` (`https://outloop.blog`).
 - `webmaster_verifications:` is stubbed (commented) in `_config.yml`. Activate it after registering the domain in Google Search Console / Bing Webmaster Tools.
 
 **Phase 5 — Search (done, Pagefind)**
@@ -60,7 +60,7 @@ Three features ship *code-complete but activation-gated*: giscus comments, Plaus
 **Phase 8 — Analytics (code-complete, activation-gated)**
 - Strategy: Plausible.
 - Gate lives in `_includes/analytics.html`: tag only renders when `jekyll.environment == "production"` **and** `site.plausible.domain.size > 0`. Same `.size > 0` reasoning as comments.
-- `_config.yml` carries a `plausible:` block with `domain: ""` and an optional `script_src` override (for domain-proxied deployments that dodge tracker-blockers). **To activate**: create a Plausible site, set `domain: "zerodowntime.dev"`. Local `rake serve` stays silent because `JEKYLL_ENV` defaults to `development`; the Actions workflow sets `JEKYLL_ENV=production`.
+- `_config.yml` carries a `plausible:` block with `domain: ""` and an optional `script_src` override (for domain-proxied deployments that dodge tracker-blockers). **To activate**: create a Plausible site, set `domain: "outloop.blog"`. Local `rake serve` stays silent because `JEKYLL_ENV` defaults to `development`; the Actions workflow sets `JEKYLL_ENV=production`.
 
 **Phase 9 — Highlighting + math + diagrams (done)**
 - Rouge theme generated via `bundle exec rougify style github > _sass/_syntax.scss` and pulled in by `main.scss` via `@use "syntax"`. `.stylelintrc.json` ignores `_sass/_syntax.scss` because it's tool-generated.
@@ -73,8 +73,8 @@ Three features ship *code-complete but activation-gated*: giscus comments, Plaus
 - Dropped: `w3c_validators` (not replaced — modern browsers already surface most violations, and the added Ruby dep isn't worth the marginal signal) and `scss_lint` (stylelint is its modern successor). This is an intentional divergence from section 0 of `blog_deployment_plan.md`.
 
 **Phase 11 — Custom domain (done)**
-- `CNAME` at the repo root contains `zerodowntime.dev`.
-- `_config.yml` uses `url: https://zerodowntime.dev`. Do not change without coordinating DNS / Pages custom-domain settings — `.dev` TLDs are on HSTS preload, so a mis-timed DNS cutover makes the site unreachable, not just downgraded.
+- `CNAME` at the repo root contains `outloop.blog`.
+- `_config.yml` uses `url: https://outloop.blog`. Do not change without coordinating DNS / Pages custom-domain settings. (Note: `.blog` is not on the HSTS preload list — unlike the former `.dev` domain — but still wait for the Let's Encrypt cert to provision before enabling "Enforce HTTPS" in Pages settings.)
 - `webmaster_verifications:` in `_config.yml` is still commented out — activate after registering with Google Search Console and Bing Webmaster Tools.
 
 **Phase 12 — CI/CD (done)**

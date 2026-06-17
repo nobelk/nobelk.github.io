@@ -31,6 +31,9 @@ Most posts here fall into one of four areas:
 
 ## Contact
 
+- Email &mdash; <a href="mailto:hello@outloop.blog">hello@outloop.blog</a>
+- Bluesky &mdash; <a href="https://bsky.app/profile/outloop.bsky.social">@outloop.bsky.social</a>
+- DEV &mdash; <a href="https://dev.to/outloop">@outloop</a>
 - LinkedIn &mdash; <a href="https://linkedin.com/in/nobelkhandaker">nobelkhandaker</a>
 - GitHub &mdash; <a href="https://github.com/nobelk">@nobelk</a>
 - RSS &mdash; <a href="{{ '/feed.xml' | relative_url }}">/feed.xml</a>

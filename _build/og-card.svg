@@ -7,10 +7,9 @@
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
   <rect x="0" y="0" width="1200" height="6" fill="#b71c1c"/>
-  <text x="100" y="260" font-family="Georgia, 'PT Serif', serif" font-size="72" font-weight="bold" fill="#ffffff">Zero Downtime</text>
-  <text x="100" y="340" font-family="Georgia, 'PT Serif', serif" font-size="28" fill="#a0a0b8">Notes on building reliable distributed</text>
-  <text x="100" y="380" font-family="Georgia, 'PT Serif', serif" font-size="28" fill="#a0a0b8">systems with multiagents</text>
-  <line x1="100" y1="420" x2="400" y2="420" stroke="#b71c1c" stroke-width="3"/>
-  <text x="100" y="470" font-family="'Courier New', monospace" font-size="20" fill="#707090">zerodowntime.dev</text>
-  <text x="100" y="510" font-family="Georgia, 'PT Serif', serif" font-size="22" fill="#808098">Dr. Nobel Khandaker</text>
+  <text x="100" y="270" font-family="'Courier New', monospace" font-size="76" font-weight="bold" fill="#ffffff">outloop.blog</text>
+  <text x="100" y="350" font-family="Georgia, 'PT Serif', serif" font-size="28" fill="#a0a0b8">Notes on building reliable distributed</text>
+  <text x="100" y="390" font-family="Georgia, 'PT Serif', serif" font-size="28" fill="#a0a0b8">systems with multiagents</text>
+  <line x1="100" y1="430" x2="400" y2="430" stroke="#b71c1c" stroke-width="3"/>
+  <text x="100" y="485" font-family="Georgia, 'PT Serif', serif" font-size="22" fill="#808098">Dr. Nobel Khandaker</text>
 </svg>
