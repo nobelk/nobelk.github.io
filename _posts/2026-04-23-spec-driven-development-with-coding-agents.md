@@ -9,7 +9,7 @@ tags: [spec-driven-development, coding-agents, ai, claude-code, workflow]
 categories: [practices]
 ---
 
-**Spec-Driven Development (SDD)** is the process of creating a living contract between human developers and coding agents where the *Specification* (the *what* and *why*) is deliberately decoupled from the *Implementation* (the *how*).  SDD allows a human developer to become an architect who guides the agent to build and ship high quality software. In this blog I summarize my experience of using the SDD in software engineering.  The prompts and the skills are from Paul's SDD course — see the [DeepLearning.AI course repo on GitHub](https://github.com/https-deeplearning-ai/sc-spec-driven-development-files).
+**Spec-Driven Development (SDD)** is the process of creating a living contract between human developers and coding agents where the *Specification* (the *what* and *why*) is deliberately decoupled from the *Implementation* (the *how*).  SDD allows a human developer to become an architect who guides the agent to build and ship high quality software. In this blog I summarize my experience using SDD in software engineering. The prompts and skills are adapted from DeepLearning.AI's short course on Spec-Driven Development — see the [course materials repo on GitHub](https://github.com/https-deeplearning-ai/sc-spec-driven-development-files).
 
 <!--more-->
 
@@ -17,9 +17,9 @@ categories: [practices]
 
 ## Why Spec-Driven Development?
 
-The problems I usually face with vibe coding are 1) lost chat histories and context and 2) lack of a shared architecture/dev contract. These usually result in poor coordination among our team members for complex and long development projects.
+Vibe coding gives me two recurring problems: lost chat histories and context, and the absence of a shared architecture and development contract. On complex, long-running projects, both translate into poor coordination across the team.
 
-> **SDD is appropriate for projects with significant complexity** if you can accomplish what you need in one short prompt, SDD will not provide any advantages.
+> **SDD is appropriate for projects with significant complexity.** If you can accomplish what you need in one short prompt, SDD adds overhead without benefit.
 
 ---
 
@@ -33,7 +33,7 @@ The SDD workflow has two major layers: a one-time **project initialization** ste
 
 ## Phase 0: Create the Project Constitution
 
-The Constitution is the **agent-agnostic and structured foundation of the entire project**. It is a global, high-level set of documents that captures the agreement between the developers in our team and the agent stored in a `specs/` directory:
+The Constitution is the **agent-agnostic and structured foundation of the entire project**. It is a global, high-level set of documents, stored in a `specs/` directory, that captures the agreement between the developers and the agent:
 
 ![Constitution components: mission.md, tech-stack.md, and roadmap.md in a specs/ directory](/assets/img/sdd_constitution.png){: loading="lazy"}
 
@@ -105,21 +105,21 @@ specs/feature-XX/
 
 #### Step 1 — a clean context and a new git branch
 
-I always clear the agent's context before starting which forces the agent loads everything it needs from the spec files — not from the memory of a previous session.
+I always clear the agent's context before starting, which forces the agent to load everything it needs from the spec files — not from the memory of a previous session.
 
 #### Step 2 — create a feature spec
 
 ```text
 Find the next phase on specs/roadmap.md and make a branch, ask me about the feature spec. Create:
 
-A new directory YYYY-MM-DD-feature-name under specs for this feature work
+A new directory feature-XX under specs (numbered to match the roadmap phase) for this feature work
 In there:
 plan.md as a series of numbered task groups.
 requirements.md for the scope, decisions, context
 validation.md for how to know the implementation succeeded and can be merged
 Refer to specs/mission.md and specs/tech-stack.md for guidance.
 
-Important: You must use your AskUserQuestion tool, grouped on these 3, before writing to disk.
+Important: If your agent has an AskUserQuestion-style tool, use it to ask these as one grouped set before writing to disk.
 ```
 
 #### Step 3 — Make decisions at the right altitude
@@ -210,7 +210,7 @@ If a code mistake traces back to something ambiguous in the spec, I ask the agen
 
 #### Step 3 — run tests
 
-Here review and run tests via IDE and use the IDE debugger to step through execution.  If the testing framework wasn't configured during implementation, add it via a replanning step (see Phase 4).
+Here review and run tests via the IDE and use the IDE debugger to step through execution. If the testing framework wasn't configured during implementation, add it via a replanning step (see Phase 4).
 
 #### Step 4 — constitution updates within a feature branch
 
@@ -304,14 +304,14 @@ I want to stop repeating the feature spec prompt. Use your skill creator to help
 
 Find the next phase on specs/roadmap.md and make a branch, ask me about the feature spec. Create:
 
-A new directory YYYY-MM-DD-feature-name under specs for this feature work
+A new directory feature-XX under specs (numbered to match the roadmap phase) for this feature work
 In there:
 plan.md as a series of numbered task groups.
 requirements.md for the scope, decisions, context
 validation.md for how to know the implementation succeeded and can be merged
 Refer to specs/mission.md and specs/tech-stack.md for guidance.
 
-Important: You must use your AskUserQuestion tool, grouped on these 3, before writing to disk.
+Important: If your agent has an AskUserQuestion-style tool, use it to ask these as one grouped set before writing to disk.
 ```
 
 ```text
@@ -319,7 +319,7 @@ I want to keep a CHANGELOG.md in the project root, with headings for dates. If n
 ```
 
 ```text
-Create a validation skill to with the following steps:
+Create a validation skill with the following steps:
   1. Update CHANGELOG.md                              
   2. Run linter & auto-fix                            
   3. Run formatter                                    

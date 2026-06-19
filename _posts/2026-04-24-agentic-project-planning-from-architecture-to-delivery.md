@@ -13,7 +13,7 @@ Architecture documents are often treated as the end of design work. In an effect
 
 <!--more-->
 
-Recently, I worked on creating a task rewriting a complex industrial software. The source design describes a replacement for a legacy SignalR/ASP.NET edge server with a Go-based middleware service that coordinates field device systems, operator controller apps, and admin dashboards at remote industrial sites. It specifies the architectural style, transport strategy, runtime behavior, safety constraints, persistence rules, observability expectations, security model, test strategy, and rollout approach.
+Recently, I worked on a plan for rewriting a complex piece of industrial software. The source design describes a replacement for a legacy SignalR/ASP.NET edge server with a Go-based middleware service that coordinates field device systems, operator controller apps, and admin dashboards at remote industrial sites. It specifies the architectural style, transport strategy, runtime behavior, safety constraints, persistence rules, observability expectations, security model, test strategy, and rollout approach.
 
 We started with a strong architecture document but it did not tell a team which work must happen first, which work can happen in parallel, which ambiguities must be resolved before sprint planning, or how to turn a safety requirement like "E-Stop p99 < 100 ms" (Emergency stop signal) into stories, acceptance criteria, test gates, and release evidence.
 
@@ -67,7 +67,7 @@ The architecture has sections like:
 - Graceful startup, restart, and shutdown.
 - Network partition and state recovery.
 - Data and persistence.
-- Observability and SLOs.
+- Observability and SLOs (service-level objectives).
 - Security architecture.
 - Testing strategies.
 - Rollout and migration.
@@ -141,9 +141,11 @@ That milestone order did not copy the architecture document section-by-section. 
 The architecture makes a crucial runtime distinction:
 
 - Hot path: `ZeroMQ -> Go worker -> channel -> batch worker -> domain ports`.
-- Cold path: `ZeroMQ/REST -> Watermill -> command handler -> domain ports`.
+- Warm/cold path: `ZeroMQ/REST -> Watermill -> command handler -> domain ports`.
 
 That distinction affects planning. The hot path exists because sensor and safety traffic need low latency and predictable allocation behavior. The warm/cold path exists because ownership, device configuration, mode switches, admin operations, and peripheral commands benefit from validation, logging, retry, and workflow-style handling.
+
+Telemetry rides the hot lane for freshness, but it is not treated the same as safety once it is there: as the message-class matrix below makes explicit, telemetry may be dropped or coalesced under backpressure, whereas safety messages must not be. Same lane, different drop policy.
 
 The plan therefore split messaging work into separate epics:
 
@@ -161,7 +163,7 @@ The plan therefore split messaging work into separate epics:
 
 This is a good example of agentic planning preserving design intent. A weaker plan might have created a single "Implement messaging" epic. That would hide the highest-risk part of the architecture inside a broad bucket. The agent-generated plan instead kept the hot and cold paths visible.
 
-![Message processing paths: hot path for safety-critical signals under 100ms, warm path for control commands, cold path for admin operations](/assets/img/agentic_planning_message_processing_paths.png){: loading="lazy"}
+![Message processing paths: a hot path for safety and telemetry signals routed through Go-channel batch processing, and a warm/cold path for control and admin operations routed through a Watermill router with bounded queues, both feeding the domain ports](/assets/img/agentic_planning_message_processing_paths.png){: loading="lazy"}
 
 The diagram above is more than technical documentation. It is a delivery planning device. It tells the team which work can proceed independently and where integration risk will appear.
 
@@ -277,11 +279,11 @@ The source architecture had open questions around partial partition behavior, cl
 - Clock synchronization uses external NTP on all nodes.
 - Controller key revocation uses an admin-triggered revocation list.
 - MAC is a human label only; the key is the authoritative identity.
-- RPO is 24 hours and RTO is 4 hours.
+- RPO (recovery point objective) is 24 hours and RTO (recovery time objective) is 4 hours.
 - Deployment target is Docker Compose per customer site.
 - Observability hosting uses managed error tracking and metrics platforms.
 - TLS certificates come from an internal CA owned by the team.
-- SAT completion requires 14-day soak, zero SEV-1, SLO targets met, and customer sign-off.
+- SAT (site acceptance testing) completion requires a 14-day soak, zero SEV-1 (severity-1) incidents, SLO targets met, and customer sign-off.
 - Audio/video streaming is in scope for v2 but needs more PRD detail before story breakdown.
 
 This is a critical habit. Agents can draft around ambiguity, but delivery cannot safely proceed if important ambiguity remains hidden. A decision log gives every story a traceable foundation.
@@ -380,7 +382,7 @@ M6 includes:
 
 That matters because architecture migration is not done when the code compiles. It is done when production data is migrated, the site is cut over, rollback is rehearsed, support can operate the system, and customer acceptance criteria are met.
 
-The plan's SAT (site acceptance testing) criteria are concrete: 14-day soak, zero SEV-1, SLO targets met, and customer sign-off. Those criteria prevent "done" from becoming subjective at the end of the program.
+The plan's SAT criteria are concrete: 14-day soak, zero SEV-1, SLO targets met, and customer sign-off. Those criteria prevent "done" from becoming subjective at the end of the program.
 
 ---
 
@@ -394,7 +396,7 @@ They also created useful intermediate artifacts:
 
 - Persistence matrix.
 - Message-class matrix.
-- Availability SLI definition.
+- Availability SLI (service-level indicator) definition.
 - Cross-milestone dependency map.
 - Decisions log.
 - Story artifact policy.
@@ -404,7 +406,7 @@ Those artifacts make the plan auditable. A reviewer can trace a story back to a 
 
 ---
 
-## Where Our Human Team Members Still Matters
+## Where Humans Still Own the Outcome
 
 Agents can structure the plan, but they cannot own the consequences.
 

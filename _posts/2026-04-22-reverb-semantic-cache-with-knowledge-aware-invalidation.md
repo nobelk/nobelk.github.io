@@ -29,21 +29,24 @@ mechanism.
 ## Two-tiered approach
 
 The exact-match tier is cheap and essential — a SHA-256 hash of the
-normalized prompt plus namespace and model ID, looked up in a store. Sub-
-millisecond latency, perfect precision, zero false positives. It catches
-retries, duplicated user requests, and programmatic callers that issue the
-same prompt on a schedule. In production workloads this tier alone typically
-handles 20–40% of traffic, depending on how much of the workload is human-in-
-the-loop.
+normalized prompt plus namespace and model ID, looked up in a store. The
+lookup itself is a single hash-store read, perfect precision, zero false
+positives. It catches retries, duplicated user requests, and programmatic
+callers that issue the same prompt on a schedule. How much traffic it absorbs
+is entirely workload-dependent — anywhere from a rounding error to a large
+fraction, driven by how repetitive and how human-in-the-loop your callers are
+— so treat any single hit-rate figure as a property of your traffic, not of
+the cache.
 
 The semantic tier is where it gets interesting. Two users phrasing the same
 question differently — _"how do I reset my password?"_ vs. _"password reset
 help"_ — should get the same answer. The tier computes an embedding for the
 incoming prompt, searches a vector index for top-k nearest neighbors above a
 configurable cosine-similarity threshold (0.95 by default), and returns the
-closest hit. Latency climbs to ~50ms, which is still one to two orders of
-magnitude faster than actually calling the LLM, and recall improves
-substantially.
+closest hit. That adds an embedding call plus a vector search, so it is slower
+than the exact tier — but still typically one to two orders of magnitude
+faster than actually calling the LLM (the exact margin depends on your
+embedding provider and index), and recall improves substantially.
 
 The fallthrough contract is the part that makes it work: exact misses do not
 fail, they degrade to a semantic lookup. Semantic misses do not fail, they
@@ -73,9 +76,8 @@ Two interesting design choices are:
 - the lineage-based invalidation, which means stale-knowledge hallucinations
   stop being an accepted cost of caching
 
-Neither is a novel technique in isolation — CDN cache tags and hierarchical CPU caches use similar approaches. The novelty is in recognizing that LLM responses are derived data with explicit sources, and that derived-data systems have
-known-correct invalidation disciplines that work just as well when the
-derivation is a _transformer inference_.
+Neither technique is novel in isolation — the payoff is combining them, which
+the next section unpacks.
 
 ## Lineage as the first-class concept
 
@@ -87,19 +89,19 @@ to the set of sources they depend on. When a CDC listener reports a change
 for `source_id = "doc:password-guide"`, the engine asks the lineage index for
 all dependent entries and walks through them:
 
-That is also the contract the application has to honor. Reverb does **not**
-infer provenance by itself. Your retrieval layer, tool wrapper, or orchestration
-code must tell it which source documents actually contributed to the answer.
-If you omit a source, Reverb cannot invalidate on that source's change; if you
-over-attach unrelated sources, you will evict too aggressively. The cache is
-only as causally correct as the lineage you record at write time.
-
 - If the source has been _deleted_ (zero hash), invalidate every dependent
   entry.
 - If the source still exists but the `content_hash` differs from the stored
   value, invalidate.
 - If the content hash matches (the webhook fired but nothing actually
   changed), do nothing. Idempotency is free.
+
+That precision comes with a contract the application has to honor. Reverb does
+**not** infer provenance by itself. Your retrieval layer, tool wrapper, or
+orchestration code must tell it which source documents actually contributed to
+the answer. If you omit a source, Reverb cannot invalidate on that source's
+change; if you over-attach unrelated sources, you will evict too aggressively.
+The cache is only as causally correct as the lineage you record at write time.
 
 Compare this to the naive alternative — TTL-based invalidation, tuned
 conservatively at, say, 6 hours. During those 6 hours, the cache can serve

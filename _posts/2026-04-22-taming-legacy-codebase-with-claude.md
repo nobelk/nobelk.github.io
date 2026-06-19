@@ -15,7 +15,7 @@ Every engineering team eventually inherits a codebase that has outgrown its orig
 
 <!--more-->
 
-This article documents how our team used Claude to audit and harden three legacy services over a multi-month effort. The services were modest in size — roughly fifteen to sixty source files each — but they sat on the critical path of a real-time control system. A crash in any of them meant downtime for physical equipment in the field. That made the usual "just rewrite it" advice completely unacceptable.
+This article documents how our team used Claude to audit and harden three legacy services over a multi-month effort. The services ranged from small to mid-sized — roughly fifteen to two hundred source files each — but they sat on the critical path of a real-time control system. A crash in any of them meant downtime for physical equipment in the field. That made the usual "just rewrite it" advice completely unacceptable.
 
 What follows is a practical playbook. We walk through how we used Claude for five distinct jobs:
 
@@ -31,9 +31,9 @@ High-risk changes were verified with tests first or alongside the fix, especiall
 
 ## The Landscape We Inherited
 
-Three services sat at the heart of the system. A device-side proxy ran on embedded Linux hardware and bridged a local message bus to a central coordinator over SignalR. A server-side coordinator aggregated state from hundreds of connected devices and fanned out commands to operator consoles. A mobile controller gave field operators a touchscreen interface to issue commands.
+Three services sat at the heart of the system. A device-side proxy ran on embedded Linux hardware and bridged a local message bus — over Redis pub/sub with Protobuf — to a central coordinator over SignalR. A server-side coordinator aggregated state from hundreds of connected devices and fanned out commands to operator consoles. A mobile controller gave field operators a touchscreen interface to issue commands.
 
-![Monolithic DataBridgeService split into transport, command dispatch, state, and peripheral control components](/assets/img/refactored_components.png)
+![Three-service topology: a mobile Operator Console (~180 files) talks over SignalR to a server-side Coordinator (~60 files), which talks over SignalR to a device-side EdgeProxy (~15 files), which bridges to a Local Message Bus over Redis pub/sub with Protobuf](/assets/img/refactored_components.png)
 
 Across the audit documents we generated for these services, Claude surfaced well over **140 issue instances** across five categories:
 
@@ -499,15 +499,13 @@ If you are staring down a legacy codebase of your own, here is the compact versi
 
 1. **Ask Claude to audit a single module.** Start narrow. Get the markdown output.
 2. **Tag every issue with severity.** Safety-critical first, data-integrity next, everything else by effort.
-3. **Write the failing test before the fix.** Every single time. No exceptions, even for one-line changes.
+3. **Write the failing test first for risky changes.** Concurrency, startup, and observability fixes earn a failing test before the fix — every time. For lower-risk defects, a reproducer plus review or a post-fix integration test can be the right call; the rule is never to change risky code without some repeatable proof it got safer.
 4. **Keep PRs small.** One issue, one PR. Your reviewers will thank you and your burndown will be honest.
 5. **Regenerate the audit monthly.** New issues creep in. Catching them when they are one line old is cheap.
 6. **Invest in logging early.** Correlation IDs and structured log tests repay their cost within weeks.
 7. **Delete more than you write.** Commented-out files, stale TODOs, unused branches — none of them are getting better with age.
 
-The core realization is that Claude is not a replacement for engineering judgment. It is a tireless pair for the parts of engineering that humans are worst at: the inventory, the tabular bookkeeping, the "did we check every `Dictionary` in the codebase?" grind. Pairing Claude's completeness with a human's priority-setting turns the dreaded "tech debt week" into something closer to a steady drumbeat of small, confident improvements.
-
-If I were distilling this into one rule for engineering teams, it would be this: use Claude to widen the search space, not to waive review. Let it find the patterns, draft the boring fixes, and keep the backlog honest. But keep the decisions about severity, test depth, and merge readiness with engineers who understand the system's actual failure modes.
+The core realization is that Claude is not a replacement for engineering judgment — it is a tireless pair for the parts of engineering humans are worst at: the inventory, the tabular bookkeeping, the "did we check every `Dictionary` in the codebase?" grind. Distilled into one rule: use Claude to widen the search space, not to waive review. Let it find the patterns, draft the boring fixes, and keep the backlog honest, but keep the decisions about severity, test depth, and merge readiness with engineers who understand the system's actual failure modes.
 
 And every time one of those improvements lands — every time a race condition that used to page the on-call engineer at three in the morning stops paging anyone — you feel the debt getting lighter. That is the whole point.
 

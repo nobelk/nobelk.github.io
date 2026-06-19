@@ -13,10 +13,11 @@ distributed system we have ever built — they can get stuck. The failure mode i
 worse than an outright crash: _no exception is raised_, _no timer fires_, _no agent knows anything is wrong_. The workflow just stops producing tokens. The operator sees a spinner.
 
 [Tangle](https://github.com/nobelk/tangle) is a small Python library that
-catches this class of failure in real time for LangGraph workflows (and, via
-OpenTelemetry, for anything else). It reuses an idea that has been sitting in
-operating-systems textbooks since 1972 — the Wait-For Graph — and applies it at
-the agent layer, where the same topology has quietly reappeared.  To be specific, in its current implementation, Tangle provides repeated-pattern detection over message digests.
+catches this class of failure in real time for LangGraph workflows (and, via an
+HTTP sidecar or OpenTelemetry, for anything else). It reuses an idea that has
+been sitting in operating-systems textbooks since 1972 — the Wait-For Graph —
+and applies it at the agent layer, where the same topology has quietly
+reappeared.
 
 <!--more-->
 
@@ -43,9 +44,8 @@ reviewer waiting for editor
 editor waiting for researcher   # closing edge; cycle exists now
 ```
 
-At that moment, you do not need a timeout to guess the workflow is stuck. The
-structure itself is enough: every agent in the cycle is waiting on another
-agent in the same cycle, so no further progress is possible without external
+At that moment you do not need a timeout to guess the workflow is stuck — the
+structure is the proof. No further progress is possible without external
 intervention.
 
 Both failures are detectable in principle. The question is how to detect them
@@ -54,27 +54,38 @@ cheaply enough that instrumentation doesn't dominate the workflow's own cost.
 ## Architecture
 
 Tangle separates _event ingestion_ from _detection_ from _resolution_. The
-three stages are deliberately independent — you can swap SDK hooks for OTLP
-spans, switch cycle detection to livelock detection per event type, and chain
+three stages are deliberately independent — you can swap one ingestion path for
+another, switch cycle detection to livelock detection per event type, and chain
 resolvers in any order. The shape of the system:
 
-![Tangle architecture: event ingestion from LangGraph hooks and OpenTelemetry feeding cycle and livelock detectors](/assets/img/tangle_architecture.png)
+![Tangle architecture: event ingestion from SDK hooks, LangGraph decorators, and a FastAPI sidecar feeding the TangleMonitor, which drives the Wait-For Graph and the cycle and livelock detectors, then a resolver chain and a Memory or SQLite store](/assets/img/tangle_architecture.png)
 
-Events flow in from one of three sources. Each event is a small, typed record
-(e.g., `REGISTER`, `WAIT_FOR`, `RELEASE`, `SEND`, `CANCEL`, `COMPLETE`). They hit
-`TangleMonitor.process_event()`, which updates the Wait-For Graph and
-dispatches to the appropriate detector: `WAIT_FOR` events touch cycle
-detection, `SEND` events touch livelock pattern matching. When either fires,
-the resolver chain runs in order and halts on the first resolver that
-succeeds.
+Events arrive over four ingestion paths, two in-process and two
+out-of-process. In-process: the LangGraph decorators and direct SDK/MCP hooks,
+which call into the monitor from inside your workflow. Out-of-process: a
+FastAPI sidecar (`POST /v1/events`) and an OpenTelemetry OTLP/gRPC receiver,
+which let other processes and other languages feed the same pipeline. (The
+diagram shows the first three boxes; the OpenTelemetry receiver is the fourth
+path, covered below.)
+
+Each event is a small, typed record (e.g., `REGISTER`, `WAIT_FOR`, `RELEASE`,
+`SEND`, `CANCEL`, `COMPLETE`). They hit `TangleMonitor.process_event()` — the
+thread-safe orchestrator at the center of the diagram, which serializes
+concurrent ingestion so the Wait-For Graph never sees a torn update. It updates
+the graph and dispatches to the appropriate detector: `WAIT_FOR` events touch
+cycle detection, `SEND` events touch livelock pattern matching. When either
+fires, the resolver chain runs in order and halts on the first resolver that
+succeeds. Events and detections are kept in a pluggable store — in-memory for
+ephemeral runs, SQLite when you want the history to survive a restart.
 
 ## Why a Wait-For Graph?
 
 The Wait-For Graph (WFG) is one of those classical constructs that keeps
 reappearing in disguise. Holt described it in 1972 for kernel deadlock
 detection. Database engines use it for transaction lock cycles. Distributed
-lock managers like Chubby and ZooKeeper reason about it implicitly. The
-insight in Tangle is that an LLM agent holding a conversational turn is, for
+lock managers like Chubby and ZooKeeper face the same circular-wait problem
+whenever clients block on each other's locks. The insight in Tangle is that an
+LLM agent holding a conversational turn is, for
 the purposes of progress analysis, _isomorphic_ to a process holding a
 resource. Same graph, different vertices.
 
@@ -142,8 +153,13 @@ you can roll out detection to a subset of production traffic without changing
 the graph definition.
 
 For non-LangGraph workflows (or for multi-language stacks), Tangle can
-reconstruct the same events from _OpenTelemetry spans_, which means any tracing
-instrumentation you already have becomes deadlock-aware for free.
+reconstruct the same events from _OpenTelemetry spans_ — the fourth ingestion
+path. This is not quite free: the receiver reads a small span-attribute
+convention, so your spans must carry the `tangle.*` keys it maps to events
+(`tangle.agent.id`, `tangle.workflow.id`, `tangle.event.type`,
+`tangle.target.agent`, `tangle.resource`, and `tangle.message.hash`). Once an
+existing trace pipeline emits those attributes, it becomes deadlock-aware
+without a separate integration.
 
 ## Resolution, not just detection
 
