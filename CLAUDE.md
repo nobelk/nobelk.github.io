@@ -8,7 +8,7 @@ Dr. Nobel Khandaker's personal blog. The repo follows the GitHub Pages user-site
 
 ## Current state
 
-Phases 1–13 of `blog_deployment_plan.md` are in place and the site is live at `https://outloop.blog` with published posts in `_posts/`. Phase 11 (custom domain) was completed out-of-order in an earlier session. Phase 14 (post-launch polish) is still open by design.
+Phases 1–13 of the original deployment plan are in place and the site is live at `https://outloop.blog` with published posts in `_posts/`. Phase 11 (custom domain) was completed out-of-order in an earlier session. Phase 14 (post-launch polish) is still open by design. (The `blog_deployment_plan.md` scaffold that drove these phases has been removed — the per-phase notes below are now the authoritative record.)
 
 Three features ship *code-complete but activation-gated*: giscus comments, Plausible analytics, and KaTeX/Mermaid on-page toggles. They render nothing until the operator fills in the `_config.yml` block or adds the per-post front-matter flag. Details in the per-phase notes below.
 
@@ -70,7 +70,7 @@ Three features ship *code-complete but activation-gated*: giscus comments, Plaus
 **Phase 10 — Quality gates (done, with divergence from the plan's tool list)**
 - Kept: `html-proofer` (internal links on every build, externals on a weekly schedule — see the external-links workflow), `rubocop`.
 - Added: `stylelint` + `stylelint-config-standard-scss` and `markdownlint-cli2`, with `.stylelintrc.json` and `.markdownlint-cli2.jsonc` tuned for prose-heavy content. Run via `npm run lint`.
-- Dropped: `w3c_validators` (not replaced — modern browsers already surface most violations, and the added Ruby dep isn't worth the marginal signal) and `scss_lint` (stylelint is its modern successor). This is an intentional divergence from section 0 of `blog_deployment_plan.md`.
+- Dropped: `w3c_validators` (not replaced — modern browsers already surface most violations, and the added Ruby dep isn't worth the marginal signal) and `scss_lint` (stylelint is its modern successor). This is an intentional divergence from the original deployment plan's tool list.
 
 **Phase 11 — Custom domain (done)**
 - `CNAME` at the repo root contains `outloop.blog`.
@@ -80,7 +80,7 @@ Three features ship *code-complete but activation-gated*: giscus comments, Plaus
 **Phase 12 — CI/CD (done)**
 - `.github/workflows/deploy.yml` runs on push to `main` and on PRs to `main`: checks out with `fetch-depth: 0` (so `jekyll-last-modified-at` can read full git history), sets up Ruby 3.3.5 + Node 20, runs `npm ci`, then `npm run lint` (stylelint + markdownlint, so style regressions fail before the build cost), then `JEKYLL_ENV=production bundle exec rake build`, then `bundle exec rake test`, then uploads the `_site` artifact. `deploy` only runs on push events to `main`.
 - `.github/workflows/external-links.yml` runs weekly (Mondays 12:00 UTC) and on manual dispatch. It's `continue-on-error: true` so upstream outages don't page anyone. This is the Phase-10 "external link validation" deferred off the hot path.
-- **Don't run `rake test` before upload** — the Rakefile's `test` task validates the existing `_site`, never rebuilds it, which the plan's original workflow got wrong (Review Comment #1 in `blog_deployment_plan.md`). Running `build → test → upload` keeps a single authoritative artifact.
+- **Don't run `rake test` before upload** — the Rakefile's `test` task validates the existing `_site`, never rebuilds it, which the plan's original workflow got wrong. Running `build → test → upload` keeps a single authoritative artifact.
 
 ## Writing a post
 
