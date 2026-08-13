@@ -7,10 +7,14 @@ tags: [agents, langgraph, reliability, distributed-systems]
 categories: [systems]
 ---
 
-Multi-agent LLM workflows are, from a concurrency standpoint, small distributed
-systems. They hold resources, they wait on each other, and — like every other
-distributed system we have ever built — they can get stuck. The failure mode is
-worse than an outright crash: _no exception is raised_, _no timer fires_, _no agent knows anything is wrong_. The workflow just stops producing tokens. The operator sees a spinner.
+The most unnerving agent failure is not a crash but a pause that never ends.
+No exception is raised. Each participant is still alive. The workflow simply
+stops producing tokens, and the operator is left with a spinner and a question:
+is the system slow, or will it wait forever?
+
+From the standpoint of concurrency, a multi-agent workflow is a small
+distributed system. Its participants hold state, exchange messages, and wait
+on one another. The old failure modes have followed the new vocabulary.
 
 [Tangle](https://github.com/nobelk/tangle) is a small Python library that
 catches this class of failure in real time for LangGraph workflows (and, via an
@@ -78,16 +82,14 @@ fires, the resolver chain runs in order and halts on the first resolver that
 succeeds. Events and detections are kept in a pluggable store — in-memory for
 ephemeral runs, SQLite when you want the history to survive a restart.
 
-## Why a Wait-For Graph?
+## Why a Wait-For Graph works
 
 The Wait-For Graph (WFG) is one of those classical constructs that keeps
-reappearing in disguise. Holt described it in 1972 for kernel deadlock
-detection. Database engines use it for transaction lock cycles. Distributed
-lock managers like Chubby and ZooKeeper face the same circular-wait problem
-whenever clients block on each other's locks. The insight in Tangle is that an
-LLM agent holding a conversational turn is, for
-the purposes of progress analysis, _isomorphic_ to a process holding a
-resource. Same graph, different vertices.
+reappearing in disguise. Richard Holt described the underlying resource-graph
+model in 1972; database engines still use related graphs to find transaction
+lock cycles. For the purpose of progress analysis, an LLM agent waiting on a
+turn can be represented much like a process waiting on a resource. The graph
+does not care what its vertices call themselves.
 
 That matters because cycle detection on a WFG is a well-understood problem with
 well-understood complexity. Tangle uses two complementary algorithms:
@@ -96,8 +98,8 @@ well-understood complexity. Tangle uses two complementary algorithms:
    back along existing edges from the target to see if you return to the
    source. O(V+E) worst case, but in practice tiny because multi-agent graphs
    are shallow.
-2. **Periodic Kahn's-algorithm scan** over the whole graph. A topological sort
-   that fails is a cycle that exists. This is the belt-and-suspenders pass
+2. **Periodic Kahn's-algorithm scan** over the whole graph. If the algorithm
+   cannot remove every vertex, a cycle exists. This is the full-graph pass
    that catches anything the incremental detector might race against during
    concurrent edits.
 
@@ -181,7 +183,7 @@ The chain executes in order and stops on the first success. Configure it once;
 the per-detection behavior emerges from the config, not from scattered
 try/except blocks in agent code.
 
-## Where this fits
+## Where it fits
 
 If you are running LangGraph in production, especially with conditional edges
 or multi-agent negotiation patterns, you have almost certainly hit a workflow
@@ -193,11 +195,12 @@ contribution is to give the same workflow a _structural_ reason to cancel
 (we waited too long). That distinction matters at scale, because it
 decouples correctness from tail latency.
 
-The approach generalizes past LangGraph. Any system where autonomous
+The approach extends beyond LangGraph. Any system where autonomous
 components exchange messages and occasionally wait on each other — agent
 frameworks, workflow orchestrators, multi-model ensembles — has the same
 failure modes. Tangle is an early, careful implementation of what I suspect
-will become a valuable tool in building reliable and fault tolerant agentic infrastructure: _progress monitors_ that
+will become valuable in reliable, fault-tolerant agent infrastructure:
+_progress monitors_ that
 treat liveness as a first-class property, not a property you check by
 inference after everything has already gone quiet.
 

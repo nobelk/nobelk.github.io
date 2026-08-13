@@ -9,26 +9,44 @@ tags: [agentic-planning, project-management, architecture, delivery, jira]
 categories: [practices]
 ---
 
-Architecture documents are often treated as the end of design work. In an effective engineering organization, they are the beginning of delivery work. The architecture document and the developer design decisions usually get converted to concrete executable task backlog for the engineering team. The engineering team lead and the program or product manager work together to perform this conversion.
+An architecture document is organized to make a system understandable. A
+delivery plan is organized to make the system buildable. The distance between
+the two is where elegant designs often acquire vague epics, hidden
+dependencies, and a final “hardening” sprint containing all the risk the plan
+failed to name.
 
 <!--more-->
 
-Recently, I worked on a plan for rewriting a complex piece of industrial software. The source design describes a replacement for a legacy SignalR/ASP.NET edge server with a Go-based middleware service that coordinates field device systems, operator controller apps, and admin dashboards at remote industrial sites. It specifies the architectural style, transport strategy, runtime behavior, safety constraints, persistence rules, observability expectations, security model, test strategy, and rollout approach.
+I encountered that distance while planning the replacement of a complex piece
+of industrial software: a legacy SignalR/ASP.NET edge server was to become a
+Go middleware service coordinating field devices, operator controllers, and
+administrative dashboards at remote sites. The design covered architecture,
+transport, runtime behavior, safety, persistence, observability, security,
+testing, and rollout. It was thorough. It was not yet executable.
 
-We started with a strong architecture document but it did not tell a team which work must happen first, which work can happen in parallel, which ambiguities must be resolved before sprint planning, or how to turn a safety requirement like "E-Stop p99 < 100 ms" (Emergency stop signal) into stories, acceptance criteria, test gates, and release evidence.
+It did not say which work must happen first, which could proceed in parallel,
+or which ambiguities had to be resolved before sprint planning. Nor did it
+explain how a requirement such as “emergency-stop latency below 100 ms at p99”
+should become acceptance criteria, benchmarks, and release evidence.
 
-This is where agentic planning became useful for us. Agents can read the architecture document, extract its delivery-relevant facts, challenge gaps, and synthesize a backlog that preserves the architecture's intent. Our goal was not to have an agent invent a project plan. The goal was to have agents compile, cross-check, and structure the plan from the design.
+This is where agents became useful: not as project managers inventing a plan,
+but as compilers and cross-checkers. They extracted delivery-relevant facts,
+traced constraints into multiple artifacts, and made omissions visible. The
+engineering lead and product or program manager still owned the sequence,
+staffing assumptions, and consequences.
 
 This article walks through that process using the **anonymized** Jira delivery plan as the case study.
 
 ---
 
-## The Source Material
+## The source material
 
 The architecture document defines an edge-management middleware service with these major characteristics:
 
 - A Go modular monolith using hexagonal architecture, also known as Ports and Adapters.
-- A domain core responsible for device group management, field-device finite state machines, ownership rules, E-Stop propagation, and device group's limit computation.
+- A domain core responsible for device-group management, field-device finite
+  state machines, ownership rules, E-Stop propagation, and group-limit
+  computation.
 - ZeroMQ for real-time communication with field devices and controller apps.
 - REST APIs for admin dashboard and auth sidecar communication.
 - Watermill for cold-path command routing.
@@ -54,7 +72,7 @@ An agent cannot ignore any of that. A useful plan has to preserve those constrai
 
 ---
 
-## The Planning Problem
+## The planning problem
 
 The hard part is that architecture documents are organized for understanding, while delivery plans are organized for execution.
 
@@ -90,7 +108,7 @@ The important point here is the review loop. Agents accelerate the conversion, b
 
 ---
 
-## Step 1: Extract Delivery-Relevant Facts
+## Step 1: Extract delivery-relevant facts
 
 The first agent task is not to generate stories. It is to extract facts.
 
@@ -112,7 +130,7 @@ For example, "ZeroMQ client" is an implementation fact. "E-Stop must reach all f
 
 ---
 
-## Step 2: Convert Architecture Boundaries into Work Boundaries
+## Step 2: Convert architecture boundaries into work boundaries
 
 The architecture chose hexagonal boundaries because the middleware service sits between multiple transport protocols and a safety-critical domain. That choice is also a planning gift.
 
@@ -136,7 +154,7 @@ That milestone order did not copy the architecture document section-by-section. 
 
 ---
 
-## Step 3: Separate the Hot Path from the Warm/Cold Path
+## Step 3: Separate the hot path from the warm and cold paths
 
 The architecture makes a crucial runtime distinction:
 
@@ -169,7 +187,7 @@ The diagram above is more than technical documentation. It is a delivery plannin
 
 ---
 
-## Step 4: Promote Safety Constraints into Delivery Gates
+## Step 4: Promote safety constraints into delivery gates
 
 Safety requirements should not sit passively in a requirements section. They need to become acceptance criteria, benchmarks, tests, and milestone exit conditions.
 
@@ -221,7 +239,7 @@ The result is that safety becomes an execution structure, not just a paragraph i
 
 ---
 
-## Step 5: Build State Matrices Before Writing Stories
+## Step 5: Build state matrices before writing stories
 
 The Jira plan contains two authoritative matrices that are more important than they may look:
 
@@ -266,7 +284,7 @@ This is one of the most valuable outputs of the agentic planning process. The ag
 
 ---
 
-## Step 6: Resolve Ambiguity into a Decisions Log
+## Step 6: Resolve ambiguity in a decision log
 
 Architecture documents often contain open questions. Some are harmless. Some are project blockers disguised as implementation details.
 
@@ -305,7 +323,7 @@ The best agentic plans make assumptions visible. They do not bury them in prose.
 
 ---
 
-## Step 7: Turn Test Strategy into Continuous Quality Tracks
+## Step 7: Turn test strategy into continuous quality tracks
 
 The architecture document includes a test pyramid and detailed test categories. A typical project plan might move all of that to the end under a "Testing" milestone. That is too late for this system.
 
@@ -333,7 +351,7 @@ The same pattern appears in observability. M1 establishes logs, error tracking, 
 
 ---
 
-## Step 8: Model Parallelization Explicitly
+## Step 8: Model parallel work explicitly
 
 A delivery plan is only useful if it accounts for the team that will execute it. This anonymized plan assumes three to four engineers, two-week sprints, and roughly nine months of work.
 
@@ -366,7 +384,7 @@ This is the kind of information agents can infer from dependencies, but humans s
 
 ---
 
-## Step 9: Keep Release Work in the Plan
+## Step 9: Keep release work in the plan
 
 The architecture document includes rollout and migration. The delivery plan preserves that as M6 rather than treating it as an operations afterthought.
 
@@ -386,7 +404,7 @@ The plan's SAT criteria are concrete: 14-day soak, zero SEV-1, SLO targets met, 
 
 ---
 
-## What Agents Did Well
+## What agents did well
 
 The strongest parts of the plan are the places where agents used the architecture document as a constraint system.
 
@@ -406,7 +424,7 @@ Those artifacts make the plan auditable. A reviewer can trace a story back to a 
 
 ---
 
-## Where Humans Still Own the Outcome
+## Where people still own the outcome
 
 Agents can structure the plan, but they cannot own the consequences.
 
@@ -424,12 +442,19 @@ Agentic planning reduces planning labor. It does not remove technical accountabi
 
 ---
 
-## A Repeatable Agentic Planning Pattern
+## A repeatable planning pattern
 
-The agent-created plan accurately captures that the service is not simply a rewrite from C#/SignalR to Go/ZeroMQ. It is a safety-sensitive architecture migration with strict latency, restart, identity, idempotency, observability, and rollout requirements. It also makes clear where the team can parallelize and where it must serialize work. That is what good agentic project planning should produce. Not a bigger backlog. A clearer one. The following figure shows the steps that led to the final executable plan.
+The resulting plan made clear that this was not merely a rewrite from
+C#/SignalR to Go/ZeroMQ. It was a safety-sensitive migration with latency,
+restart, identity, idempotency, observability, and rollout obligations. It also
+showed where the team could work in parallel and where work had to remain
+serial. Good agentic planning should not produce a larger backlog. It should
+produce a clearer one.
 
 ![Agentic planning pattern](/assets/img/agentic_planning_repeatable_pattern.png){: loading="lazy"}
 
 Agents are most valuable when they help teams preserve architectural intent all the way down to executable work. In this case, the architecture document defined the system. The planning agents turned that definition into delivery structure: milestones, risk controls, quality gates, and release evidence.
 
-> That is the difference between an architecture document that is admired and an architecture document that ships.
+The measure of an architecture document is not how complete it appears at
+review. It is whether its intent survives all the way into the work that
+ships.

@@ -7,21 +7,19 @@ tags: [agents, trust, mcp, subjective-logic, reliability]
 categories: [systems]
 ---
 
-In multi-agent systems, an agent's trust is a first-class asset: it lets the
-other agents reason about future collaboration, coordination, and planning.
-Most "trust score" implementations in agentic systems are a single float
-between 0 and 1. That number is doing two jobs at once — representing how much
-positive evidence an agent has accumulated, and how *confident* the system is
-in that judgment — and it collapses the two into a value that can no longer
-tell them apart. A brand-new agent with no history and a seasoned agent that
-has run 10,000 tasks with an even win/loss record both land at 0.5. The scalar
-has no room to say *"I don't know yet."*
+A new agent and an unreliable one can receive the same trust score. Give the
+newcomer no history and the veteran ten thousand evenly split outcomes, and a
+typical scalar model assigns both a `0.5`. The arithmetic is tidy; the meaning
+is not. One score says, "there is not enough evidence." The other says, "there
+is plenty, and it is contradictory." A system deciding who may review a
+report, call a tool, or control a workflow ought to know the difference.
 
-[MultiTrust](https://github.com/nobelk/multitrust) fixes this by reaching for
-the right math. It represents trust as a **Subjective Logic opinion** — a
-triple of (belief, disbelief, uncertainty) that sums to one — and exposes the
-whole machinery as an MCP server, so any Model Context Protocol-aware agent
-can consult it as a standard tool call.
+[MultiTrust](https://github.com/nobelk/multitrust) keeps that distinction
+visible. It represents trust as a **Subjective Logic opinion** — belief,
+disbelief, and uncertainty, constrained to sum to one — and exposes the model
+through an MCP server. A Model Context Protocol-aware agent can therefore ask
+for a trust decision as an ordinary tool call, while an operator can still
+inspect the evidence behind it.
 
 <!--more-->
 
@@ -41,13 +39,13 @@ opinion = Opinion(
 # belief + disbelief + uncertainty == 1.0 (invariant)
 ```
 
-The projected trust score — what you use to make a gating decision — is
-`belief + uncertainty × base_rate`. This is the clever bit. A vacuous
+The projected trust score — the scalar used for a gating decision — is
+`belief + uncertainty × base_rate`. A vacuous
 opinion `(0, 0, 1)` projects to `base_rate`: in the absence of evidence, you
 fall back to the population prior. As evidence accumulates, uncertainty
-shrinks, and the projection converges on the true belief/disbelief ratio. You
-get cold-start behavior and seasoned-agent behavior from the same formula,
-with no special-casing.
+shrinks, and the projection approaches the observed positive-evidence ratio.
+Cold-start and well-observed behavior emerge from the same formula; neither
+needs a special case.
 
 Under the hood, evidence maps to opinions through the Beta distribution:
 
@@ -59,11 +57,10 @@ uncertainty = W        / (positive + negative + W)
 
 where `W` is a prior weight (the library default is 2). Every call to
 `submit_evidence()` is an update to the positive/negative counters; the opinion
-recomputes deterministically. The mapping itself has no magic numbers to
-hand-tune — belief, disbelief, and uncertainty fall straight out of the counts
-and `W`, so they cannot drift out of sync with the evidence. (Time decay,
-introduced in the architecture below, adds exactly one operator-chosen knob — a
-half-life — and nothing else.)
+recomputes deterministically. The three components are derived from the counts
+and `W`, rather than tuned independently, so they cannot drift out of agreement
+with one another. Time decay, discussed below, adds a separate
+operator-chosen half-life.
 
 That sounds abstract until you compare cold start against real history. With
 `base_rate = 0.5` and `W = 2` (both the library defaults), the mapping makes
@@ -154,18 +151,15 @@ direction too — agents recover trust as they accumulate positive evidence,
 and the time-decay mechanism ensures ancient evidence stops dominating
 current behavior.
 
-## Where this fits
+## Where it fits
 
-If you are building a multi-agent system where different agents have
-different reliability profiles — and in practice, every non-trivial
-multi-agent system has this — you eventually need a way to represent and
-reason about that. Rolling a scalar score is the obvious first move, and it
-will be wrong in the three places that matter: *cold start*, *recovery after
-degradation*, and *explainability*. Subjective Logic is a two-decades-old,
-well-studied framework that gets all three right. MultiTrust is a small,
-modern, MCP-native implementation of it. The combination of principled math
-and standard-protocol exposure is, I think, the shape this category of tool
-should take.
+Any non-trivial multi-agent system eventually discovers that its agents have
+different reliability profiles. A scalar score is the tempting first move,
+but it is least expressive where an operator needs context: at cold start,
+during recovery from degradation, and when a decision must be explained.
+Subjective Logic supplies the missing vocabulary. MultiTrust's contribution is
+to put that established model behind a small, modern interface that agents can
+consult without turning its reasoning into another opaque number.
 
 ---
 

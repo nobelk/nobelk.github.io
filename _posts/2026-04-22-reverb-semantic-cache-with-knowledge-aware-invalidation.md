@@ -7,40 +7,36 @@ tags: [llm, caching, go, distributed-systems, reliability]
 categories: [systems]
 ---
 
-Caching LLM responses seems, at first glance, like a simple optimization.
-Record the prompt, record the answer, serve the answer next time the same
-prompt comes in. In practice it is a surprisingly deep problem, and the two
-standard approaches both fail in characteristic ways. Exact-match caches miss
-on anything short of a byte-identical prompt, which is almost never how users
-actually ask questions. TTL-based caches serve confidently-stale answers for
-hours after the underlying knowledge base has changed — the classic
-hallucination vector dressed up as "we cached it."
+An LLM cache can be fast, cheap, and wrong. Record a prompt and its answer, and
+an exact-match cache works beautifully until a user changes *reset my password*
+to *password-reset help*. Add semantic matching, and the cache recognizes the
+question — but may now retrieve yesterday's answer after the policy document
+behind it has changed. The optimization has preserved the prose and discarded
+its truth.
 
 [Reverb](https://github.com/nobelk/reverb) is a Go library and standalone
-service that addresses both failure modes. It combines a _two-tier cache_
+service designed around both failure modes. It combines a *two-tier cache*
 (exact SHA-256 match, then embedding-cosine similarity) with **knowledge-aware
 invalidation**: every cached entry tracks the source documents it was derived
-from, and a change-data-capture pipeline evicts entries by _causality_ when
+from, and a change-data-capture pipeline evicts entries by *causality* when
 their sources change. TTLs become a backstop, not the primary correctness
 mechanism.
 
 <!--more-->
 
-## Two-tiered approach
+## A two-tiered lookup
 
 The exact-match tier is cheap and essential — a SHA-256 hash of the
 normalized prompt plus namespace and model ID, looked up in a store. The
 lookup itself is a single hash-store read, perfect precision, zero false
 positives. It catches retries, duplicated user requests, and programmatic
-callers that issue the same prompt on a schedule. How much traffic it absorbs
-is entirely workload-dependent — anywhere from a rounding error to a large
-fraction, driven by how repetitive and how human-in-the-loop your callers are
-— so treat any single hit-rate figure as a property of your traffic, not of
-the cache.
+callers that issue the same prompt on a schedule. Its hit rate is a property of
+the workload, not the cache: a scheduled caller may repeat prompts exactly,
+while a human almost never does.
 
 The semantic tier is where it gets interesting. Two users phrasing the same
-question differently — _"how do I reset my password?"_ vs. _"password reset
-help"_ — should get the same answer. The tier computes an embedding for the
+question differently — *"how do I reset my password?"* vs. *"password reset
+help"* — should get the same answer. The tier computes an embedding for the
 incoming prompt, searches a vector index for top-k nearest neighbors above a
 configurable cosine-similarity threshold (0.95 by default), and returns the
 closest hit. That adds an embedding call plus a vector search, so it is slower
@@ -72,7 +68,7 @@ no state beyond the store itself.
 Two interesting design choices are:
 
 - the two-tier fallthrough, which means the cache has a meaningful answer for
-  _most_ queries, not just byte-identical ones
+  *most* queries, not just byte-identical ones
 - the lineage-based invalidation, which means stale-knowledge hallucinations
   stop being an accepted cost of caching
 
@@ -83,13 +79,13 @@ the next section unpacks.
 
 When you `Store()` an entry, you hand Reverb a list of `sources` — the
 documents that contributed to the LLM's answer. Each source is a `(source_id,
-content_hash)` pair. The lineage index maintains a _bidirectional mapping_:
+content_hash)` pair. The lineage index maintains a *bidirectional mapping*:
 source IDs to the set of cache entries they contributed to, and cache entries
 to the set of sources they depend on. When a CDC listener reports a change
 for `source_id = "doc:password-guide"`, the engine asks the lineage index for
 all dependent entries and walks through them:
 
-- If the source has been _deleted_ (zero hash), invalidate every dependent
+- If the source has been *deleted* (zero hash), invalidate every dependent
   entry.
 - If the source still exists but the `content_hash` differs from the stored
   value, invalidate.
@@ -120,19 +116,18 @@ The operational sequence is short and predictable:
 
 This is not a new idea in the abstract — database query caches have done
 tuple-level invalidation for decades, and CDN cache tag invalidation is a
-production pattern at scale. The contribution is noticing _that LLM response
+production pattern at scale. The contribution is noticing *that LLM response
 caches have exactly the same dependency structure and applying the same
-discipline_.
+discipline*.
 
-## The pluggable-backends discipline
+## Pluggable backends without wishful abstraction
 
 Reverb exposes four interfaces, each with two or more implementations:
 
 - **`embedding.Provider`** — OpenAI, Ollama, or a deterministic fake for
   tests. The fake (`fake.New(n)`) is a hash-based embedder that produces
   stable vectors for stable inputs, which makes integration tests
-  reproducible without requiring an API key. This is the kind of detail that
-  signals the library was written by someone who actually runs tests in CI.
+  reproducible without requiring an API key.
 - **`vector.Index`** — a brute-force flat index (O(n)) and an HNSW index
   (approximately logarithmic search in practice). You start with flat, and
   when you outgrow it you swap in HNSW with no other code changes.
@@ -144,8 +139,8 @@ Reverb exposes four interfaces, each with two or more implementations:
   architectural fit: webhook for push-based CMS integrations, polling for
   systems you cannot modify, NATS for high-volume event streams.
 
-The interface-driven design makes Reverb realistic to adopt: start with all-in-memory (zero
-infrastructure), move to Redis plus HNSW when you outgrow a single process,
+The interface-driven design makes Reverb practical to adopt: start entirely
+in memory, move to Redis plus HNSW when you outgrow a single process,
 swap the CDC listener when your source-of-truth changes. None of those
 migrations need to touch the application code.
 
@@ -168,17 +163,15 @@ The HTTP and gRPC servers share the same underlying `Client`, so you can
 deploy both protocols side-by-side from the same binary and pick whichever
 your calling environment prefers.
 
-## Where this fits
+## Where it fits
 
-I think semantic caching is about to become table stakes for production
-LLM systems in the same way that ordinary HTTP caching became table stakes
-for the web in the 2000s. The _cost pressure_ is enormous — every cache hit
-is an LLM call that did not happen — and the latency improvement is user-
-perceptible. But "cache LLM responses" is the easy version of the problem.
-The hard version is _"cache LLM responses correctly, even when the world
-the LLM is reasoning about changes out from under the cache."_ That is the
-problem Reverb is built to solve.
+Semantic caching is likely to become ordinary production infrastructure: every
+hit removes an LLM call, along with its cost and most of its latency. But
+matching equivalent questions is the easy half. The harder obligation is to
+notice when the world an answer described has changed. A useful cache must
+know not only that two questions resemble each other, but also why yesterday's
+answer is no longer entitled to survive.
 
 ---
 
-Reverb handles the _knowledge freshness_ dimension of agent reliability. For the _trust_ side — knowing which agents to rely on based on observed behavior — see [MultiTrust](/2026/04/22/multitrust-subjective-logic-for-multi-agent-systems.html). For detecting when agents get stuck waiting on each other, see [Tangle](/2026/04/22/tangle-deadlock-detection-for-langgraph.html).
+Reverb handles the *knowledge freshness* dimension of agent reliability. For the *trust* side — knowing which agents to rely on based on observed behavior — see [MultiTrust](/2026/04/22/multitrust-subjective-logic-for-multi-agent-systems.html). For detecting when agents get stuck waiting on each other, see [Tangle](/2026/04/22/tangle-deadlock-detection-for-langgraph.html).

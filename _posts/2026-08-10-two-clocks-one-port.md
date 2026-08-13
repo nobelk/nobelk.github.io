@@ -9,15 +9,23 @@ categories: [systems]
 mermaid: true
 ---
 
-The previous part of this series was about a bug that every quality gate missed because nobody had asked the crossing question. This part is about the opposite move: taking a hazard that *was* named, and pushing it out of the documentation and into the type system, where neither a tired engineer nor a coding agent can step on it without the compiler objecting.
+A clock can be wrong by doing exactly what it was designed to do. In a Go
+service coordinating moving equipment, the wall clock had to accept
+corrections so its outbound timestamps agreed with other machines. The same
+service also used time to decide whether equipment was still responding. A
+backward correction could make a silent unit appear newly alive.
 
-The subject is a Go service at the edge of a physical site, coordinating moving equipment. It does two unrelated things with time, and the two requirements are irreconcilable in a single `now()`.
+The hazard was easy to describe and easy to reintroduce. The durable fix was
+to move it out of documentation and into the type system, where a tired
+engineer or a coding agent would meet a compiler error instead of a cautionary
+comment. The service did not need a better `now()`. It needed two different
+questions.
 
 <!--more-->
 
 ---
 
-## TL;DR
+## The central argument
 
 A long-lived process needs a clock that can be **corrected** (so its outbound timestamps agree with other machines) and a measurement that can **never step** (so "have I heard from unit 7 in the last five seconds?" means what it says). One value cannot satisfy both contracts.
 
@@ -27,7 +35,7 @@ The fix was to split the port into two reads returning **two different types**, 
 
 ---
 
-## The Two Requirements
+## Two incompatible requirements
 
 The process does two things with time:
 
@@ -53,7 +61,7 @@ These are not two views of one problem. A single value can *carry* both readings
 
 ---
 
-## The Failure This Prevents
+## The failure this prevents
 
 Make it concrete. The liveness rule is:
 
@@ -88,7 +96,7 @@ Note the trigger: **the correction is not a bug.** It is the clock doing exactly
 
 ---
 
-## Why the Language's Built-In Answer Is Not Enough
+## Why the language's built-in answer is not enough
 
 Since Go 1.9, `time.Time` carries a monotonic reading alongside the wall clock, and `Sub` prefers the monotonic one when both operands have it. On paper the standard library already solved this.
 
@@ -124,7 +132,7 @@ This is the exact shape of change a coding agent makes cheerfully and correctly 
 
 ---
 
-## The Design: Two Reads, Two Types, One Port
+## Two reads, two types, one port
 
 Stop treating "what time is it" as one question. The port the application depends on carries **two reads with different contracts** and — critically — **different types**.
 
@@ -186,7 +194,7 @@ flowchart TB
     INST --> FRESH
 ```
 
-### The Type Is the Enforcement
+### The type is the enforcement
 
 The load-bearing decision is that `Elapsed()` returns neither `time.Time` nor `time.Duration`. It returns a distinct opaque type:
 
@@ -220,7 +228,7 @@ Each rejected alternative had a specific cost:
 
 The unexported field does real work: `Instant` cannot be built from a `time.Time`, encodes to `{}` rather than a plausible-looking timestamp, and cannot be printed as a date. Be precise about the strength of this, though — Go still lets you print the struct, compare two with `==`, use one as a map key, and reach it through reflection. What the type removes is the *accidental* misuse, not every deliberate one.
 
-### Push the Type to Where the Value Is Created
+### Push the type to where the value is created
 
 A doc comment saying "this must be a monotonic reading" is worth nothing under maintenance. So the ports whose values feed freshness comparisons changed their *return types*:
 
@@ -283,7 +291,7 @@ Both operands of the comparison are `Instant`. There is no way to write this fun
 
 ---
 
-## Where the Correction Comes From
+## Where the correction comes from
 
 The service does not run an NTP daemon and does not set the host clock. It corrects **its own reads, in userspace**, which keeps a safety-relevant behavior inside the artifact that is tested and deployed rather than in host configuration.
 
@@ -350,7 +358,7 @@ sequenceDiagram
 
 That diagram is the whole argument in one frame: the same correction that *must* move one consumer must *not* move the other. One `now()` cannot do that.
 
-### Holdover: Counting Attempts, Not Seconds
+### Holdover: counting attempts, not seconds
 
 When polls fail, the last measured offset keeps being served. Only after a budget of *consecutive failed polls* is spent does the clock latch an observable unsynchronized condition, which clears on the next good sample.
 
@@ -377,7 +385,7 @@ func (c *SyncedClock) spendHoldover(ctx context.Context) {
 
 The `== holdoverBudget` guard is edge-triggering: the alert fires on the *transition* into the unsynchronized state, not on every subsequent failed poll. A four-hour outage produces one alert, not two hundred. That matters on a path that pages a human.
 
-### The Honest Part
+### The honest part
 
 Four limitations are worth stating plainly, because a design note that lists only strengths is marketing.
 
@@ -391,7 +399,7 @@ Four limitations are worth stating plainly, because a design note that lists onl
 
 ---
 
-## The Third Clock Nobody Declares
+## The third clock nobody declares
 
 There is a clock in this system that appears in no interface: the one that paces periodic work.
 
@@ -462,13 +470,21 @@ Three residual properties of the ticker, none related to the userspace offset:
 
 - **OS-level NTP slewing does scale `CLOCK_MONOTONIC`** on Linux; it is not `CLOCK_MONOTONIC_RAW`. The effect is bounded at roughly 500 ppm — well under a millisecond per second — and only applies if something else on the host is disciplining the clock. This process's own sync never does; it keeps an in-process offset and does not call `adjtimex`.
 - **`CLOCK_MONOTONIC` does not advance across system suspend** on Linux (that is `CLOCK_BOOTTIME`). For *pacing*, that is the preferable outcome: a suspended host stalls the loop rather than firing a catch-up burst on wake. For *freshness*, the same property is the hazard described above.
-- **Ticks are dropped, not queued.** This is the documented contract for a slow receiver, and it is the part to rely on: a sweep that overruns loses ticks rather than accumulating a backlog it can never work off. Do not restate it as a channel-capacity guarantee — the underlying representation changed in Go 1.23, where timer and ticker channels became unbuffered (capacity 0) instead of capacity 1. And the change is **gated on the main module's `go` directive**, not the toolchain: build with a Go 1.23+ toolchain but a `go 1.22` line in `go.mod` and you still get the old asynchronous channels. `GODEBUG=asynctimerchan=0` forces the new behavior, `=1` restores the old one, either way overriding the module default.
+- **Ticks are dropped, not queued.** This is the documented contract for a
+  slow receiver, and it is the part to rely on: a sweep that overruns loses
+  ticks rather than accumulating a backlog it can never work off. Do not
+  restate that contract as a channel-capacity guarantee. Go 1.23 introduced
+  synchronous timer channels; through Go 1.26, the behavior depended on the
+  main module's `go` directive and could be overridden with
+  `GODEBUG=asynctimerchan`. Go 1.27 removed that compatibility switch and makes
+  timer and ticker channels synchronous regardless of the directive. The
+  observable contract is dropped ticks, not the implementation history.
 
 The `tick == nil` branch is also the test seam. Production passes `nil` and gets a real ticker; a test passes its own channel and drives sweeps by hand, so a periodic loop is tested deterministically without a single `time.Sleep`.
 
 ---
 
-## What Generalizes
+## What generalizes
 
 The subject is clocks, but the shape of the fix is reusable.
 
@@ -484,7 +500,7 @@ The subject is clocks, but the shape of the fix is reusable.
 
 ---
 
-## The Agentic Through-Line
+## The agentic through-line
 
 Part 5 of this series ended on a bug that a specification, a design review, 97.7% coverage, and mutation testing all failed to catch, because none of them asked what the failure path *cost*. This one is the constructive counterpart.
 
@@ -503,7 +519,8 @@ Three practices follow:
 2. **State the *unsafe direction* in the spec, not just the constraint.** "Freshness must be monotonic" is a rule to satisfy; "a backward step suppresses a protective stop" is a reason that survives being paraphrased into a different implementation.
 3. **Name the undeclared dependencies.** The ticker is a clock that appears in no interface. Anything an agent cannot see in a type signature has to be written down explicitly, or it will be reasoned about by default assumption — and the default assumption here ("the ticker uses the wall clock") happens to be wrong in the safe direction, which is luck, not design.
 
-> The rule that survives maintenance is the one that fails the build.
+The rule most likely to survive maintenance is the one whose violation fails
+the build.
 
 ---
 
@@ -515,6 +532,8 @@ Three practices follow:
 - Go standard library, `time` — the "Monotonic Clocks" section, which specifies which operations strip the monotonic reading and how `Sub` chooses between readings: <https://pkg.go.dev/time#hdr-Monotonic_Clocks>
 - Go standard library, `time.NewTicker` — the documented tick-dropping behavior under slow receivers: <https://pkg.go.dev/time#NewTicker>
 - Go 1.23 release notes — the change making timer and ticker channels unbuffered, and the `asynctimerchan` GODEBUG that restores the previous behavior: <https://go.dev/doc/go1.23>
+- Go 1.27 release notes — removal of `asynctimerchan`; timer and ticker channels
+  are now always synchronous: <https://go.dev/doc/go1.27>
 - Go standard library source, `time/sleep.go` — `sendTime`, which constructs the value delivered on a ticker channel with `Now().Add(-delta)`: <https://go.dev/src/time/sleep.go>
 
 ### Operating-system clock semantics

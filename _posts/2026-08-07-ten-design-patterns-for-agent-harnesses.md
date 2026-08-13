@@ -9,15 +9,24 @@ categories: [systems]
 mermaid: true
 ---
 
-Writing about agents tends to be writing about prompts. Far less of it is about the **harness** — the code that sits between a user and a model loop and decides who may run what, on whose budget, against which files, with what recorded afterward. That code is where agentic systems actually succeed or fail in production.
+Most writing about agents begins with the prompt, the most visible and least
+durable part of the system. In production, the consequential decisions belong
+to the **harness**: the code between a user and a model loop that decides who
+may run what, against which files, on whose budget, and with what durable record
+afterward.
 
-[yc-software/qm](https://github.com/yc-software/qm) is an unusually legible example: a headless TypeScript core (Fastify + Postgres) that drives interchangeable agent runtimes — Pi, OpenCode, Codex, Claude — across Slack, a web app, and cron, with per-scope isolated sandboxes, memory, and credentials. It is a dense catalog of production patterns. Below are ten I found transferable to any agentic system, including single-user CLI agents.
+[yc-software/qm](https://github.com/yc-software/qm) is an unusually legible
+example: a headless TypeScript core built with Fastify and PostgreSQL, driving
+interchangeable agent runtimes across Slack, a web application, and scheduled
+jobs. Its sandboxes, memory, and credentials are isolated by scope. The code is
+a dense catalog of production decisions; ten of them transfer well even to a
+single-user command-line agent.
 
 <!--more-->
 
 ---
 
-## The Shape of a Harness
+## The shape of a harness
 
 Before the patterns, the layering they assume. Surface adapters normalize UIs, harness adapters normalize model runtimes, and a small owned core sits in the middle holding everything the business actually cares about.
 
@@ -49,13 +58,13 @@ The rule the diagram encodes: **adapters at both ends, a small testable core in 
 
 ---
 
-## 1. Own a Thin, Vendor-Neutral Turn Pipeline
+## 1. Own a thin, vendor-neutral turn pipeline
 
 qm's orchestrator owns identity, rate limits, budgets, scope resolution, security screening, prompt assembly, and compaction — then delegates the model-and-tool loop to a `Harness` interface. Four vendor loops run behind one contract.
 
 The split matters because the two halves have different half-lives. Authorization, spend controls, audit, and memory are yours for years. The planning loop is a vendor's, and may well need replacing on their schedule rather than yours. Put everything in the first category in code you own and test once, and the second category becomes swappable without touching it.
 
-## 2. Separate the Turn from the Run, and Name Every Outcome
+## 2. Separate the turn from the run, and name every outcome
 
 A qm turn — one logical interaction — ends in one of four named outcomes: **Success**, **Error**, **Gated** (suspended, awaiting human approval), or **Filtered** (rejected by security screening). Each execution attempt within a turn is a **run**, persisted separately in a `RunStore`.
 
@@ -83,19 +92,31 @@ Note that **Gated is a terminal outcome, not a blocked thread**. The turn ends; 
 
 The turn/run split does the other half of the job: each retry gets its own record while the user-facing interaction keeps one ID, so audit and crash recovery have stable identities to hang off. Even a single-user CLI agent benefits — "awaiting approval" and "rejected by policy" deserve distinct, recorded outcomes, not a shared nonzero exit code.
 
-## 3. Enforce Policy in a Deterministic Gate, Not in the Prompt
+## 3. Enforce policy in a deterministic gate, not in the prompt
 
 Every side-effecting qm tool call passes `evaluateCommandWithLayer` before execution. The gate returns three outcomes — **allow**, **require_approval**, **deny** — and the latter two are typed errors carrying the command, the reason, and the matched rule. Approval requirements live as metadata on the tool definition, read by the orchestrator rather than described to the model.
 
-The model cannot talk its way past dispatch code. It can talk its way past a system prompt, and over a long enough interaction something eventually does. The corollary pattern is how you write the resulting error: qm's tool errors are actionable prose addressed to the model, naming the correct alternative ("use the memory tool instead"). Tool results _are_ prompts, and an error that names the fix converts a failure into a recovery step instead of a retry loop.
+Dispatch code, unlike a prompt, does not negotiate. The corollary is that its
+errors should still be useful to the model: qm's tool errors name the rejected
+action, the rule, and an allowed alternative such as “use the memory tool
+instead.” Tool results become model context, so an actionable denial can turn
+a failure into a recovery step instead of a retry loop.
 
-## 4. Own the Canonical Transcript; Rebuild Provider Context Per Turn
+## 4. Own the canonical transcript; rebuild provider context per turn
 
 qm stores typed session entries in its own schema _plus_ verbatim provider "tape" records, then replays them into whichever harness runs the next turn. That buys mid-conversation model switching, redaction by audience, and replay debugging. Never let a vendor SDK's in-memory session be the only copy of the conversation.
 
-Owning the transcript is also what makes the two hard parts safe. Compaction runs at two thresholds — `COMPACT_SOFT_FRACTION = 0.7` (background summarization) and `COMPACT_HARD_FRACTION = 0.9` (inline), with deterministic truncation as the floor — so compaction can degrade but never take a turn down. And it never splits a `tool_call` from its `tool_result`. After a crash, qm injects a synthetic tool result into the rebuilt context: `[interrupted — check what actually happened before redoing anything with side effects]`. One string, and double-executed side effects stop being a restart hazard.
+Owning the transcript is also what makes the two hard parts tractable.
+Compaction runs at two thresholds — `COMPACT_SOFT_FRACTION = 0.7` (background
+summarization) and `COMPACT_HARD_FRACTION = 0.9` (inline), with deterministic
+truncation as the floor — so compaction can degrade without taking down a turn.
+It never splits a `tool_call` from its `tool_result`. After a crash, qm injects
+a synthetic result into the rebuilt context: `[interrupted — check what
+actually happened before redoing anything with side effects]`. That warning
+makes uncertainty visible to the model; the tool ledger in pattern 6 provides
+the deterministic protection against repeating a completed side effect.
 
-## 5. One Isolation Unit, and Legible State Inside It
+## 5. Use one isolation unit, with legible state inside it
 
 qm has a single tenancy primitive, `ScopeId`, and it partitions memory, filesystem, sandbox, keychain, egress policy, and ACLs **identically**. Not six similar-looking schemes — one.
 
@@ -103,19 +124,19 @@ What sits inside a scope is then held to the same standard. Memory is a bounded,
 
 One well-chosen isolation unit removes an entire class of cross-context leakage bugs — the class you otherwise discover in an incident review.
 
-## 6. Make Retries Idempotent with a Tool Ledger
+## 6. Make retries idempotent with a tool ledger
 
 qm journals every side-effecting tool call keyed by `(run, attempt, callIndex)` and returns the cached result on retry, with success-only caching predicates.
 
 This is the pattern most systems skip and most regret. The moment you add automatic retry to a turn, you have built a machine that re-runs shell commands and re-sends messages. A ledger is the difference between "retry the turn" being safe and being a production incident.
 
-## 7. Ship a Mock Harness as a Peer of the Real Ones
+## 7. Ship a mock harness as a peer of the real ones
 
 qm's `mock` harness implements the full `Harness` contract and is whitelisted for every provider. Hundreds of deterministic tests drive the entire orchestrator — approvals, screening, read-only mode — without ever calling a model.
 
 This is the single highest-leverage test asset in an agentic system, and it only exists if the harness boundary from pattern 1 is real. Above it sits an eval pyramid: deterministic behavior tests, live smoke tests against each real substrate, and LLM-judged quality benchmarks gated on regression floors. A floor-gated judged benchmark converts subjective quality into a number that can only regress loudly.
 
-## 8. Make Token Economics a Measured Number, Not a Hope
+## 8. Measure token economics
 
 Two levers, both of which only work if you instrument them.
 
@@ -123,13 +144,13 @@ The first is the prompt-cache boundary. qm builds its system prompt stable-conte
 
 The second is model routing. Most LLM calls in an agent platform are not the agent loop — summarization, judging, titling, screening, and compaction all are, and all run against cheaper models by default, derived from the base model with per-job overrides. That reserves the expensive model for the work users see. It is not free, though: degrade the screening or compaction model far enough and the main loop feels it indirectly, which is exactly why auxiliary quality belongs in the eval pyramid from pattern 7.
 
-## 9. Constrain Where Autonomous Output May Be Delivered
+## 9. Constrain where autonomous output may be delivered
 
 qm's cron jobs carry predeclared destination keys, limited to authenticated destinations of the conversation that created them. A scheduled agent cannot invent a recipient.
 
 Scheduled and event-driven turns are where agentic systems become spam vectors or exfiltration paths, because no human is in the loop at send time. The related discipline is **wake routing**: when an async event hits a session in an unknown state, decide explicitly whether to engage, steer the running turn, or drop it. "Always start a new run" is how you get duplicated work.
 
-## 10. Declare Variation Instead of Hard-Coding It
+## 10. Declare variation instead of hard-coding it
 
 Runtimes differ, and organizations differ. Both kinds of variation are better declared than branched on.
 
@@ -139,7 +160,7 @@ For organizations, customization is **data, not code**: org-specific tools, skil
 
 ---
 
-## What the Ten Have in Common
+## What the ten have in common
 
 | Pattern | The thing it refuses to trust |
 | --- | --- |
@@ -158,4 +179,6 @@ Read down the right column and the thesis is visible: **deterministic guardrails
 
 That framing also explains where qm _doesn't_ spend its complexity. It gets its multi-agent value from narrow specialized passes — a memory-consolidation agent, cheap should-I-respond judges, scheduled turns — behind strong isolation and audited bridges, rather than from orchestrated agent-to-agent fan-out. For assistant workloads, that trade holds up better than a team of agents negotiating with each other.
 
-> The hard part of an agentic system was never the loop. It is everything the loop is allowed to touch.
+The model loop is not the hard part of an agentic system. The hard part is
+everything the loop is allowed to touch — and whether the surrounding system
+can explain, constrain, and recover what happened there.

@@ -9,15 +9,22 @@ categories: [systems]
 mermaid: true
 ---
 
-The previous part put a safety contract into a type so the compiler would enforce it. This one is about a different kind of enforcement: an ordering invariant that no type can express, held instead by a data structure so small it has no failure modes of its own.
+Two goroutines can each behave correctly and still tell a subscriber the wrong
+story. One publishes immediately after an entity changes; the other sweeps all
+entities once a second. If the sweep reads first and sends last, the subscriber
+sees the new state followed by the old one. Its view moves backward.
 
-The problem is a check-then-act race between two paths that publish the same entity. The textbook fix — a lock per entity — costs more in lifecycle management than the race costs in correctness. There is a cheaper shape.
+The race calls for serialization. The obvious lock-per-entity solution works,
+then quietly creates a second problem: locks now have identities and lifetimes
+that must follow an unbounded, externally influenced set of entity IDs. A fixed
+array of striped mutexes enforces the ordering without acquiring that registry
+and its failure modes.
 
 <!--more-->
 
 ---
 
-## TL;DR
+## The short version
 
 Two independent code paths both read an entity's state and then act on it. Interleaved, they can publish a **stale result after a fresh one**, and the subscriber's view regresses.
 
@@ -29,7 +36,7 @@ To be precise up front: the pattern does not eliminate locking — a section *is
 
 ---
 
-## The Race
+## The race
 
 A service publishes an entity's status to a subscriber. Two paths produce the same message:
 
@@ -69,7 +76,7 @@ This is a classic check-then-act race. Each path is individually correct; the in
 
 ---
 
-## Why Not a Lock Per Entity?
+## Why not a lock per entity?
 
 A `map[EntityID]*sync.Mutex` guarded by its own mutex works. Consider what it obligates you to:
 
@@ -98,7 +105,7 @@ There is a cheap way out of that specific race — hold the registry mutex while
 
 ---
 
-## The Section Pattern
+## The section pattern
 
 Replace the registry with a fixed array. Hash the entity's identifier to pick a slot.
 
@@ -219,7 +226,7 @@ Three assumptions make that claim honest, and all three are worth writing into t
 
 An asynchronous send or a reordering transport moves the problem beyond the mutex's reach.
 
-### The `Lock` / `TryLock` Asymmetry Is Load-Bearing
+### The `Lock` / `TryLock` asymmetry is load-bearing
 
 ```mermaid
 flowchart TB
@@ -249,7 +256,7 @@ The caveat: under sustained contention a given entity's attempt can keep losing,
 
 ---
 
-## What Collisions Cost
+## What collisions cost
 
 With 256 sections, more than 256 entities guarantees a shared section (pigeonhole) — and chance collisions arrive far sooner than that (the birthday problem). FNV-1a is deterministic and unkeyed, so identifiers chosen by an external party can even be crafted to pile onto one stripe; if the identifier space is adversarial, that concentration belongs in your threat model.
 
@@ -290,7 +297,7 @@ The trade is the one lock striping has always made: bounded memory and zero life
 
 ---
 
-## When This Pattern Fits
+## When this pattern fits
 
 Use a fixed section array when all of these hold:
 
@@ -303,7 +310,7 @@ If instead you need cross-entity atomicity, fairness guarantees, or reader-write
 
 ---
 
-## The Agentic Through-Line
+## The agentic through-line
 
 Ask a coding agent to fix the race at the top of this article and you will get a `map[EntityID]*sync.Mutex` behind a `sync.RWMutex`. It is the textbook answer, it is well represented in every corpus, and it is *correct* on the axis the prompt named. It is also the answer that ships three new problems the prompt did not mention.
 
@@ -319,7 +326,9 @@ Three things move the outcome:
 
 The blanket rule the documentation states — `TryLock` is "often a sign of a deeper problem" — is exactly the kind of guidance an agent applies literally and a reviewer must be able to override with a reason. Write the reason down: *the fallback is doing nothing, and doing nothing is correct here because the work repeats in one second.* Rules of thumb travel well in training data. The exceptions have to come from you.
 
-> If the constraint is not in the spec, it is not in the diff.
+If a constraint is absent from the specification, it is unlikely to appear in
+the generated diff. Here, the lifecycle constraint was the one that changed the
+design.
 
 ---
 

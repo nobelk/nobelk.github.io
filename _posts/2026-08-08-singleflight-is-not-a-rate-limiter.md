@@ -9,15 +9,21 @@ categories: [systems]
 mermaid: true
 ---
 
-The first four parts of this series were about getting agents to build things — taming a legacy codebase, spec-driven development, turning architecture into a delivery plan, and the harness patterns underneath. This part is about a bug that survived every one of those gates: a design review that named the hazard, a specification that measured the hot path to the nanosecond, 97.7% coverage, and a mutation score of 0.92.
+A design review named the hazard. The specification measured the hot path to
+the nanosecond. Test coverage reached 97.7 per cent, and the mutation score was
+0.92. None of those facts prevented a read-through cache from containing the
+outline of a database outage.
 
-It was caught on a feature branch and never merged. It is worth writing up anyway, because the first review pass looked straight at this code, found half the problem, and the fix it prescribed is what turned a spike into a siege.
+The defect was caught on a feature branch and never merged. It is worth
+examining because the first review found exactly half the problem. Its remedy
+removed a concurrent query spike and replaced it with a serial, unending one:
+a thundering herd became a siege.
 
 <!--more-->
 
 ---
 
-## TL;DR
+## The short version
 
 A read-through index in front of PostgreSQL would have turned a brief database slowdown into a self-sustaining query flood. Three properties make this class nasty:
 
@@ -29,7 +35,7 @@ The fix was to delete code, not add it.
 
 ---
 
-## The Setup
+## The setup
 
 A hot ingestion path needed to answer a cheap question on every inbound message: *which group does this device belong to?*
 
@@ -81,7 +87,7 @@ Read that again. It's the bug.
 
 ---
 
-## What a Cache Stampede Is
+## The anatomy of a cache stampede
 
 A **cache stampede** (also *thundering herd*) is what happens when a cache miss is expensive and many callers miss at once. Instead of one expensive operation you get N, precisely when the expensive thing is least able to cope.
 
@@ -131,7 +137,7 @@ The sequential one arrived in the same commit, unnoticed — because once a name
 
 ---
 
-## Why singleflight Wasn't Enough
+## Why `singleflight` was not enough
 
 `singleflight` deduplicates **concurrent** calls. It does not deduplicate **sequential** ones — because a key exists only for the duration of one flight. When the flight completes the key is deleted (`singleflight.go`: `delete(g.m, key)`), so the next caller starts a brand new flight. That is correct, documented behaviour. It is a deduplicator, not a rate limiter.
 
@@ -159,18 +165,20 @@ Instead of N concurrent sweeps you get back-to-back sweeps for as long as the fa
 
 | | Without singleflight | With singleflight |
 | --- | --- | --- |
-| Peak query rate | N concurrent sweeps | 1 sweep at a time |
-| Sustained query rate | bursty, decays with load | continuous, never decays |
-| Duration | until callers give up | until the database recovers |
-| Self-healing | no | no |
+| Peak query rate | Up to N concurrent sweeps | At most 1 sweep at a time |
+| Sustained query rate | Potentially many overlapping sweeps | Back-to-back sweeps while callers continue |
+| Duration | Until callers stop or the database recovers | Until callers stop or the database recovers |
+| Self-healing | No | No |
 
-The peak is lower; the sustained load is worse. The system does nothing to help itself climb out. We replaced a spike with a siege.
+The peak is lower, which is valuable, but no recovery interval exists between
+attempts. Under steady traffic, the system does nothing to help the database
+climb out. We replaced a spike with a siege.
 
 `singleflight` did exactly what it promises. We had asked it to solve a problem it doesn't solve.
 
 ---
 
-## The Blast Radius
+## The blast radius
 
 Three properties turned a bad query pattern into an outage amplifier.
 
@@ -204,7 +212,7 @@ Our transport happens to be unpaired fire-and-forget with no retry budget, and i
 
 ---
 
-## Why This Is a Terrible Bug to Find in Production
+## Why this bug hides in production
 
 Most bugs are worst when you're watching. This one is worst when you aren't.
 
@@ -215,7 +223,7 @@ Most bugs are worst when you're watching. This one is worst when you aren't.
 
 ---
 
-## The Fix
+## The fix
 
 The shipped fix removes code:
 
@@ -250,7 +258,7 @@ flowchart TB
     A1["GroupFor"] --> A2{"stale?"}
     A2 -->|no| A3["Return from map"]
     A2 -->|yes| A4["store.GroupFor"]
-    A4 --> A5[("1 indexed query<br/>worker not parked")]
+    A4 --> A5[("1 indexed query<br/>no shared rebuild wait")]
   end
   BEFORE ~~~ AFTER
 ```
@@ -264,7 +272,7 @@ Two properties make this the right shape:
 
 ---
 
-## If You Genuinely Must Refresh on the Read Path
+## When refresh must remain on the read path
 
 Sometimes there's no cheap fallback. Then you need three things `singleflight` alone won't give you.
 
@@ -319,7 +327,7 @@ Reaching for only the first layer is the mistake we made.
 
 ---
 
-## Testing for This Class
+## Testing the cost of failure
 
 The test that catches this is not a correctness test. It counts calls.
 
@@ -345,14 +353,17 @@ Neither test asserts anything about the returned answer. That is the point. **Th
 
 ---
 
-## Takeaways
+## What to carry forward
 
 1. `singleflight` deduplicates concurrent work. It is **not** a rate limiter, a circuit breaker, or a timeout. Those are four different tools, and you probably need more than one.
 2. Never let shared, expensive work inherit a single caller's deadline — and detached is not the same as uncancellable.
 3. The best degraded mode is usually **the behaviour the optimisation replaced**. Its cost is a number you already know. (Ours had never actually run in production, since the cache and the lookup it fronts landed together. It was still the right fallback, because one indexed lookup per message is a cost you can state without measuring.)
-4. High coverage and high mutation scores measure whether code is *correct*, not whether it is *survivable*.
+4. High coverage and high mutation scores show how thoroughly tests exercise
+   stated behavior. They do not show whether the system is *survivable* under
+   a degraded dependency.
 5. A comment that names a hazard and stops is answer-shaped. The one on this field read: "flight collapses concurrent rebuilds into one." Every word true, and it says nothing about the world *with* the flight in place — but a reader asking "is the stampede handled?" finds a paragraph about stampedes and leaves satisfied. Say which cases a mitigation covers and which it doesn't, or point at the test that draws the line.
 
 The through-line with the rest of this series: agents are good at following stated rules and bad at inventing questions nobody asked, which makes an unstated criterion an unusually reliable place for a bug to hide. Every cost measurement here ran against a healthy dependency, and every failure analysis asked only which direction to fail — never the price. The bug lived in the cell where those two axes should have crossed.
 
-> Ask the crossing question explicitly, in the spec and in the harness instructions: **what does the failure path cost?**
+The missing question belonged in both the specification and the harness
+instructions: **What does the failure path cost?**

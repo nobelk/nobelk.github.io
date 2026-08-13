@@ -9,13 +9,19 @@ tags: [refactoring, technical-debt, dotnet, concurrency, reliability]
 categories: [systems]
 ---
 
-## Why This Article Exists
-
-Every engineering team eventually inherits a codebase that has outgrown its original design. Features were shipped, deadlines were met, and somewhere along the way the foundations quietly cracked. Hardcoded secrets found their way into source control. `async void` started creeping into timer callbacks. Collections got shared across threads without locks. A comment saying `// TODO: fix this properly` quietly turned into a permanent resident.
+Every old codebase contains a history of reasonable decisions that stopped
+being reasonable together. A deadline introduced an `async void` callback; a
+later feature shared its collection across threads; an emergency credential
+became permanent configuration. The system kept running, which made each
+compromise look survivable, until the compromises began to interact.
 
 <!--more-->
 
-This article documents how our team used Claude to audit and harden three legacy services over a multi-month effort. The services ranged from small to mid-sized — roughly fifteen to two hundred source files each — but they sat on the critical path of a real-time control system. A crash in any of them meant downtime for physical equipment in the field. That made the usual "just rewrite it" advice completely unacceptable.
+Over several months, our team used Claude to audit and harden three such .NET
+services. They ranged from roughly fifteen to two hundred source files, but all
+sat on the critical path of a real-time control system. A crash meant downtime
+for physical equipment in the field. “Just rewrite it” was not a strategy; it
+was another way to describe an unacceptable production risk.
 
 What follows is a practical playbook. We walk through how we used Claude for five distinct jobs:
 
@@ -29,7 +35,7 @@ High-risk changes were verified with tests first or alongside the fix, especiall
 
 ---
 
-## The Landscape We Inherited
+## The landscape we inherited
 
 Three services sat at the heart of the system. A device-side proxy ran on embedded Linux hardware and bridged a local message bus — over Redis pub/sub with Protobuf — to a central coordinator over SignalR. A server-side coordinator aggregated state from hundreds of connected devices and fanned out commands to operator consoles. A mobile controller gave field operators a touchscreen interface to issue commands.
 
@@ -49,7 +55,7 @@ Those counts came from multiple audits run on different services and at differen
 
 What the numbers did tell us, reliably, was where the risk clustered: concurrency, observability, and unsafe async usage. No single human could hold that entire list in working memory while also writing code. That is exactly the kind of problem where Claude earns its keep.
 
-## What Claude Did, and What Human Developers Still Owned
+## What Claude did, and what developers still owned
 
 Claude was most useful in four places:
 
@@ -67,7 +73,7 @@ Humans still owned the parts that actually determine whether a system stays safe
 
 ---
 
-## Our Working Loop
+## The working loop
 
 Every change followed the same four-phase cycle. The loop became muscle memory within the first two weeks.
 
@@ -79,7 +85,7 @@ Throughout the effort, we produced markdown audit documents. Each one listed eve
 
 ---
 
-## Part 1 — Refactoring
+## Part 1 — Refactoring by evidence
 
 We asked Claude for a refactoring proposal. The useful part was not "AI architecture." It was the dependency map: which methods touched transport, which ones mutated shared state, and which timers or callbacks crossed those boundaries. From there, the split along transport, command dispatch, state, and peripheral control became fairly obvious.
 
@@ -93,7 +99,7 @@ These rules sound obvious, but before Claude cataloged every violation across **
 
 ---
 
-## Part 2 — Fixing Bugs and Logging Blind Spots
+## Part 2 — Bugs and logging blind spots
 
 The audit surfaced bugs ranging from the embarrassing to the genuinely dangerous. We will walk through two representative examples and then describe the logging work, which turned out to have the highest operational return.
 
@@ -127,12 +133,9 @@ task.ContinueWith(t =>
 return task; // return the original, not the continuation
 ```
 
-`★ Insight ─────────────────────────────────────`
-
-- The key was returning the *original* task rather than the continuation. The health-check loop needs to observe the real task's fault status, not a continuation that always completes normally.
-- `TaskContinuationOptions.OnlyOnFaulted` is belt-and-suspenders: even if someone later changes the predicate, the continuation will only fire on the fault path.
-
-`─────────────────────────────────────────────────`
+The load-bearing change was returning the *original* task. The health check
+needed to observe that task's state, not the state of a continuation. The
+`OnlyOnFaulted` option then made the logging callback's contract explicit.
 
 ### The "unit mismatch" bug
 
@@ -186,20 +189,21 @@ initializationTask.SafeFireAndForget(ex =>
         "Initial data fetch failed — service started with empty cache"));
 ```
 
-`★ Insight ─────────────────────────────────────`
-
-- The `SafeFireAndForget` helper is popular in mobile and server .NET code because it lets you call async methods from sync contexts. But its default behavior — swallow everything — is a silent failure generator. Every high-value call site needed an `onException` handler, and some startup-path failures deserved `LogCritical`, not `LogError`.
-- The biggest logging win was not "more logs." It was better logs: correlation, identifiers, and audit trails on operations that operators actually care about.
-
-`─────────────────────────────────────────────────`
+The lesson was not to produce more logs. It was to make failures attributable.
+Every consequential fire-and-forget call needed an exception path, and every
+operator-facing action needed identifiers that survived the trip across
+services.
 
 We added logging assertions around key paths and used them to catch regressions, but this was not a codebase with exhaustive log-level test coverage. The useful lesson was narrower: once logging becomes part of your operational contract, it deserves tests just like any other behavior.
 
 ---
 
-## Part 3 — Eliminating Race Conditions
+## Part 3 — Eliminating race conditions
 
-This was the longest phase and the one with the most learning. Race conditions are the pathology that legacy .NET codebases are most prone to, because C# makes it very easy to share a `Dictionary` or a `bool` between threads without anything shouting at you.
+This was the longest phase and the one with the most learning. In these
+services, SignalR handlers, timers, background tasks, and a UI thread all made
+shared state easy to create and difficult to reason about. A `Dictionary` or
+`bool` crosses those boundaries without the compiler objecting.
 
 One of the concurrency audits found 44 race conditions across a service and its related components. They fell into six archetypes:
 
@@ -260,12 +264,10 @@ public void AddOrUpdate(DeviceId id, DeviceState state)
 }
 ```
 
-`★ Insight ─────────────────────────────────────`
-
-- `ImmutableInterlocked.AddOrUpdate` gives you atomic single-writer-multiple-reader semantics without a lock. The reader gets a consistent snapshot because the dictionary reference they captured is literally immutable.
-- This was not a universal replacement for locks. In some audited code, a plain lock was simpler and safer because readers and writers also needed to coordinate side effects like event raises or timer replacement.
-
-`─────────────────────────────────────────────────`
+`ImmutableInterlocked.AddOrUpdate` makes the update atomic, and a reader keeps a
+consistent snapshot because the dictionary it captured cannot change. This was
+not a universal replacement for locks. Where an update also coordinated an
+event or timer, an ordinary lock was often clearer.
 
 ### Archetype 2 — Plain flag across threads
 
@@ -315,12 +317,11 @@ public static void StopWork()
 }
 ```
 
-`★ Insight ─────────────────────────────────────`
-
-- A `CancellationToken` has the cross-thread memory semantics baked in — the reader always sees the cancelled state after `Cancel()` returns. You do not have to think about `volatile` because you delegated that worry to the framework.
-- A secondary benefit: `CancellationToken` composes. You can pass it to `Task.Delay`, `HttpClient.SendAsync`, database calls, and loop checks with a single mechanism. A `volatile bool` cannot do that.
-
-`─────────────────────────────────────────────────`
+A cancellation token supplies the required cross-thread signalling semantics
+and, unlike a `volatile bool`, composes with `Task.Delay`, HTTP requests,
+database calls, and other asynchronous boundaries. Production code must still
+synchronize replacement and disposal of the `CancellationTokenSource` if
+`BeginWork` and `StopWork` can run concurrently.
 
 ### Archetype 3 — Timer callback racing its own field
 
@@ -333,9 +334,14 @@ _heartbeatTimer.AutoReset = false;
 _heartbeatTimer.Start();
 ```
 
-If the caller invoked this twice quickly, the first timer's `Elapsed` handler could still fire after the field had been reassigned. The handler then mutated the "current" timer state even though it was the *previous* timer's callback. Worse, the old timer was orphaned — it was still alive on the garbage collector's finalizer queue, still capable of running its callback one more time.
+If the caller invoked this twice quickly, the first timer's `Elapsed` handler
+could already be queued when the field was reassigned. The old callback then
+mutated the “current” state even though it belonged to the previous timer.
+Stopping a timer prevents future scheduling; it does not retract a callback
+that is already running or queued.
 
-The fix was to wrap the swap in a lock and eagerly stop-and-dispose the prior timer:
+The lifecycle half of the fix was to wrap the swap in a lock and eagerly stop
+and dispose the prior timer:
 
 ```csharp
 private readonly object _timerLock = new();
@@ -361,7 +367,18 @@ private void ReplaceHeartbeatTimer(TimeSpan interval)
 }
 ```
 
-We also audited every `Timer.Elapsed` handler we could find for `async void` lambdas. An exception thrown out of `async void` can tear down the process or vanish into an unobserved failure path depending on context. In either case, it is unacceptable in infrastructure code. The fix was to wrap the handler and surface the failure explicitly:
+That excerpt is not, by itself, protection from an already queued callback.
+The production handler also carried a generation value captured when the timer
+was created and rechecked it before committing state; a callback from an older
+generation returned without changing anything. Stopping and disposing prevent
+future scheduling, while the generation check rejects work already in flight.
+
+We also audited every `Timer.Elapsed` handler for `async void` lambdas. An
+exception escaping `async void` cannot be observed through a returned `Task`;
+depending on the synchronization context and runtime, it may be posted to the
+context or terminate the process. Neither is an acceptable implicit policy for
+infrastructure code. The handler therefore caught and surfaced failures
+explicitly:
 
 ```csharp
 _disconnectTimer.Elapsed += async (_, _) =>
@@ -391,7 +408,7 @@ We did not fix all 44. We explicitly chose to leave one. It was a static integer
 
 ---
 
-## Part 4 — Reducing Technical Debt
+## Part 4 — Making technical debt observable
 
 "Technical debt" is a vague term, so we tried to reduce it to observable indicators. We tracked five, all derived from audit output:
 
@@ -411,7 +428,7 @@ The remaining eleven `TODO` comments were all triaged. Each one either got a tic
 
 ---
 
-## Testing Strategy Throughout
+## Testing the risky changes
 
 For the risky changes, the workflow was:
 
@@ -475,7 +492,7 @@ The practical lesson was not "TDD solves legacy systems." It was narrower: if yo
 
 ---
 
-## What Worked, What Surprised Us
+## What worked, and what surprised us
 
 Three things worked far better than expected.
 
@@ -493,7 +510,7 @@ Two things surprised us.
 
 ---
 
-## A Playbook You Can Steal
+## A compact playbook
 
 If you are staring down a legacy codebase of your own, here is the compact version of the playbook:
 
