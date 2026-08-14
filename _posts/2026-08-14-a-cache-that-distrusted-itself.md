@@ -188,11 +188,11 @@ sequenceDiagram
     participant B as Refresh for B
     participant C as Cache
 
-    A->>G: advance to N; capture N
+    A->>G: advance to N, capture N
     A->>A: read A from the database
-    B->>G: advance to N+1; capture N+1
+    B->>G: advance to N+1, capture N+1
     A->>G: compare N with N+1
-    A->>C: mark the cache stale; advance to N+2
+    A->>C: mark the cache stale, advance to N+2
     B->>G: compare N+1 with N+2
     B->>C: abandon its install, too
 ```
